@@ -1,0 +1,189 @@
+/* 
+ * MRI重建系统样式表
+ * 包含自定义样式和组件样式覆盖 
+ */
+
+/* 全局样式 */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #343a40;
+}
+
+.container {
+  max-width: 1200px;
+}
+
+/* 卡片样式 */
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: none;
+}
+
+.card-header {
+  border-top-left-radius: 10px !important;
+  border-top-right-radius: 10px !important;
+  font-weight: 600;
+}
+
+/* 图像容器 */
+.image-container {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.image-preview {
+  width: 100%;
+  height: 250px;
+  border: 1px dashed #ced4da;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* 度量指标卡片 */
+.metric-card {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 10px 0;
+  color: #0d6efd;
+}
+
+/* 按钮样式 */
+.btn {
+  border-radius: 5px;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* 加载遮罩 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* 表单样式 */
+.form-control, .form-select {
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* 模型信息区域 */
+#modelInfo {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.model-info-table {
+  font-size: 0.9rem;
+}
+
+.model-info-table th {
+  width: 40%;
+  font-weight: 600;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .image-preview {
+    height: 200px;
+  }
+  
+  .metric-value {
+    font-size: 20px;
+  }
+}
+
+/* 徽章样式 */
+.badge {
+  padding: 6px 10px;
+  font-weight: 500;
+}
+
+/* 进度条样式 */
+.progress {
+  height: 10px;
+  border-radius: 5px;
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 工具提示 */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+} 

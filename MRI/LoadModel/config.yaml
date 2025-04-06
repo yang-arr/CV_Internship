@@ -1,0 +1,43 @@
+# 配置文件：包含模型训练的所有超参数设置
+# 主要配置项：
+# 1. 硬件配置
+# 2. 数据集配置
+# 3. 模型架构配置
+# 4. 训练参数配置
+
+# GPU配置
+gpu_id: 0  # 使用的GPU ID，如果使用CPU则设置为-1
+
+# 数据集配置
+dataset_path: "./dataset.hdf5"  # 数据集文件路径
+
+# 预测模式配置（当前未使用）
+prediction_mode: "kspace"  # 预测模式，目前未使用
+
+# 编码器配置
+encoder:
+  encoding_mode: "fourier"  # 编码方式，目前只支持"fourier"
+  in_features: 2           # 输入特征维度（x,y坐标）
+  out_features: 512        # 输出特征维度
+  coordinate_scales: [1.0, 1.0]  # 坐标缩放因子
+  b_scale: 10             # 频率矩阵缩放因子，不建议修改
+
+# 多层感知机(MLP)配置
+mlp:
+  mlp_hidden_features: 512  # 隐藏层特征维度
+  mlp_hidden_layers: 6      # 隐藏层数量
+  omega_0: 25              # SIREN的频率参数
+  activation: "sine"        # 激活函数类型，可选"sine"或"relu"
+
+# 训练参数配置
+learning_rate: 1e-4        # 学习率
+epochs: 20000              # 训练轮数
+save_interval: 100         # 模型保存间隔（每多少轮保存一次）
+
+# 监督模式配置
+supervision_mode: "kspace_csm"   # 监督模式，目前只支持"kspace_csm"
+
+# 正则化配置
+use_penalty: True          # 是否使用背景惩罚
+use_tv: True              # 是否使用总变差正则化
+lambda_tv: 1e-5           # 总变差正则化系数

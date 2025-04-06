@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑文章</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 300px;
+            resize: vertical;
+        }
+        .tag-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 40px;
+        }
+        .tag {
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tag .remove {
+            cursor: pointer;
+            color: #dc3545;
+        }
+        .tag-input input {
+            border: none;
+            outline: none;
+            padding: 0;
+            flex: 1;
+            min-width: 100px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .save-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .save-btn:hover {
+            background-color: #218838;
+        }
+        .cancel-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background-color: #5a6268;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>编辑文章</h1>
+        <div id="message" class="message"></div>
+        <form id="articleForm">
+            <div class="form-group">
+                <label for="title">标题</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="category">分类</label>
+                <select id="category" name="category" required>
+                    <!-- 分类选项将通过JavaScript动态加载 -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="summary">摘要</label>
+                <textarea id="summary" name="summary" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="content">内容</label>
+                <textarea id="content" name="content" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="tags">标签</label>
+                <div class="tag-input" id="tagInput">
+                    <input type="text" id="tagInputField" placeholder="输入标签，按回车添加">
+                </div>
+                <div id="selectedTags" class="tag-list"></div>
+            </div>
+            <div class="button-group">
+                <button type="button" class="cancel-btn" onclick="window.location.href='/static/knowledge.html'">取消</button>
+                <button type="submit" class="save-btn">保存</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // 检查登录状态
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/static/login.html';
+        }
+
+        // 获取文章ID（如果是编辑模式）
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        // 已选择的标签
+        let selectedTags = new Set();
+
+        // 加载分类列表
+        async function loadCategories() {
+            try {
+                const response = await fetch('/knowledge/categories');
+                const categories = await response.json();
+                const categorySelect = document.getElementById('category');
+                categorySelect.innerHTML = categories.map(category => `
+                    <option value="${category.id}">${category.name}</option>
+                `).join('');
+            } catch (error) {
+                console.error('加载分类失败:', error);
+            }
+        }
+
+        // 加载标签列表
+        async function loadTags() {
+            try {
+                const response = await fetch('/knowledge/tags');
+                const tags = await response.json();
+                // 可以在这里实现标签建议功能
+            } catch (error) {
+                console.error('加载标签失败:', error);
+            }
+        }
+
+        // 加载文章数据（如果是编辑模式）
+        async function loadArticle() {
+            if (!articleId) return;
+            
+            try {
+                const response = await fetch(`/knowledge/articles/${articleId}`);
+                const article = await response.json();
+                
+                // 填充表单数据
+                document.getElementById('title').value = article.title;
+                document.getElementById('category').value = article.category_id;
+                document.getElementById('summary').value = article.summary || '';
+                document.getElementById('content').value = article.content;
+                
+                // 设置标签
+                article.tags.forEach(tag => {
+                    addTag(tag.id, tag.name);
+                });
+            } catch (error) {
+                console.error('加载文章失败:', error);
+            }
+        }
+
+        // 添加标签
+        function addTag(id, name) {
+            if (selectedTags.has(id)) return;
+            
+            selectedTags.add(id);
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag';
+            tagElement.innerHTML = `
+                ${name}
+                <span class="remove" data-id="${id}">&times;</span>
+            `;
+            
+            document.getElementById('selectedTags').appendChild(tagElement);
+            
+            // 添加删除事件
+            tagElement.querySelector('.remove').addEventListener('click', () => {
+                selectedTags.delete(id);
+                tagElement.remove();
+            });
+        }
+
+        // 处理标签输入
+        const tagInput = document.getElementById('tagInputField');
+        tagInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tagName = tagInput.value.trim();
+                if (!tagName) return;
+                
+                try {
+                    // 创建新标签
+                    const response = await fetch('/knowledge/tags', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ name: tagName })
+                    });
+                    
+                    const tag = await response.json();
+                    addTag(tag.id, tag.name);
+                    tagInput.value = '';
+                } catch (error) {
+                    console.error('创建标签失败:', error);
+                }
+            }
+        });
+
+        // 处理表单提交
+        document.getElementById('articleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('title').value,
+                category_id: parseInt(document.getElementById('category').value),
+                summary: document.getElementById('summary').value,
+                content: document.getElementById('content').value,
+                tag_ids: Array.from(selectedTags)
+            };
+            
+            try {
+                const url = articleId 
+                    ? `/knowledge/articles/${articleId}`
+                    : '/knowledge/articles';
+                
+                const method = articleId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showMessage('保存成功！', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/static/knowledge.html';
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    showMessage(error.detail || '保存失败', 'error');
+                }
+            } catch (error) {
+                console.error('保存文章失败:', error);
+                showMessage('保存失败，请检查网络连接', 'error');
+            }
+        });
+
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+
+        // 初始化
+        loadCategories();
+        loadTags();
+        loadArticle();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .main-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .category-list {
+            list-style: none;
+            padding: 0;
+        }
+        .category-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .category-list li:hover {
+            background-color: #f8f9fa;
+        }
+        .category-list li.active {
+            background-color: #e9ecef;
+        }
+        .article-list {
+            list-style: none;
+            padding: 0;
+        }
+        .article-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .article-item:last-child {
+            border-bottom: none;
+        }
+        .article-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+        .article-title:hover {
+            color: #007bff;
+        }
+        .article-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .article-summary {
+            color: #666;
+            line-height: 1.6;
+        }
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .tag {
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pagination button:hover {
+            background-color: #f8f9fa;
+        }
+        .pagination button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .new-article-btn {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .new-article-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索知识库...">
+            </div>
+            <h3>分类</h3>
+            <ul class="category-list" id="categoryList">
+                <!-- 分类列表将通过JavaScript动态加载 -->
+            </ul>
+            <h3>标签</h3>
+            <div class="tag-list" id="tagList">
+                <!-- 标签列表将通过JavaScript动态加载 -->
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <h2>知识库</h2>
+                <a href="/static/article-edit.html" class="new-article-btn">新建文章</a>
+            </div>
+            <ul class="article-list" id="articleList">
+                <!-- 文章列表将通过JavaScript动态加载 -->
+            </ul>
+            <div class="pagination" id="pagination">
+                <!-- 分页控件将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检查登录状态
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/static/login.html';
+        }
+
+        // 全局变量
+        let currentPage = 1;
+        let currentCategory = null;
+        let currentTag = null;
+        let searchKeyword = '';
+
+        // 加载分类列表
+        async function loadCategories() {
+            try {
+                const response = await fetch('/knowledge/categories');
+                const categories = await response.json();
+                const categoryList = document.getElementById('categoryList');
+                categoryList.innerHTML = `
+                    <li class="${!currentCategory ? 'active' : ''}" data-id="">全部</li>
+                    ${categories.map(category => `
+                        <li class="${currentCategory === category.id ? 'active' : ''}" 
+                            data-id="${category.id}">${category.name}</li>
+                    `).join('')}
+                `;
+                
+                // 添加点击事件
+                categoryList.querySelectorAll('li').forEach(li => {
+                    li.addEventListener('click', () => {
+                        currentCategory = li.dataset.id || null;
+                        currentPage = 1;
+                        loadArticles();
+                    });
+                });
+            } catch (error) {
+                console.error('加载分类失败:', error);
+            }
+        }
+
+        // 加载标签列表
+        async function loadTags() {
+            try {
+                const response = await fetch('/knowledge/tags');
+                const tags = await response.json();
+                const tagList = document.getElementById('tagList');
+                tagList.innerHTML = tags.map(tag => `
+                    <span class="tag ${currentTag === tag.id ? 'active' : ''}" 
+                          data-id="${tag.id}">${tag.name}</span>
+                `).join('');
+                
+                // 添加点击事件
+                tagList.querySelectorAll('.tag').forEach(tag => {
+                    tag.addEventListener('click', () => {
+                        currentTag = tag.dataset.id === currentTag ? null : tag.dataset.id;
+                        currentPage = 1;
+                        loadArticles();
+                    });
+                });
+            } catch (error) {
+                console.error('加载标签失败:', error);
+            }
+        }
+
+        // 加载文章列表
+        async function loadArticles() {
+            try {
+                const params = new URLSearchParams({
+                    skip: (currentPage - 1) * 10,
+                    limit: 10
+                });
+                
+                if (currentCategory) {
+                    params.append('category_id', currentCategory);
+                }
+                if (currentTag) {
+                    params.append('tag_id', currentTag);
+                }
+                if (searchKeyword) {
+                    params.append('keyword', searchKeyword);
+                }
+                
+                const response = await fetch(`/knowledge/articles?${params}`);
+                const data = await response.json();
+                
+                const articleList = document.getElementById('articleList');
+                articleList.innerHTML = data.items.map(article => `
+                    <li class="article-item">
+                        <a href="/static/article.html?id=${article.id}" class="article-title">
+                            ${article.title}
+                        </a>
+                        <div class="article-meta">
+                            <span>作者: ${article.author.username}</span> |
+                            <span>分类: ${article.category.name}</span> |
+                            <span>浏览: ${article.view_count}</span> |
+                            <span>发布时间: ${new Date(article.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="article-summary">${article.summary || ''}</div>
+                        <div class="tag-list">
+                            ${article.tags.map(tag => `
+                                <span class="tag">${tag.name}</span>
+                            `).join('')}
+                        </div>
+                    </li>
+                `).join('');
+                
+                // 更新分页
+                updatePagination(data.total);
+            } catch (error) {
+                console.error('加载文章失败:', error);
+            }
+        }
+
+        // 更新分页控件
+        function updatePagination(total) {
+            const totalPages = Math.ceil(total / 10);
+            const pagination = document.getElementById('pagination');
+            
+            let html = '';
+            if (currentPage > 1) {
+                html += `<button onclick="changePage(${currentPage - 1})">上一页</button>`;
+            }
+            
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button class="${currentPage === i ? 'active' : ''}" 
+                            onclick="changePage(${i})">${i}</button>
+                `;
+            }
+            
+            if (currentPage < totalPages) {
+                html += `<button onclick="changePage(${currentPage + 1})">下一页</button>`;
+            }
+            
+            pagination.innerHTML = html;
+        }
+
+        // 切换页面
+        function changePage(page) {
+            currentPage = page;
+            loadArticles();
+        }
+
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchKeyword = e.target.value;
+                currentPage = 1;
+                loadArticles();
+            }, 500);
+        });
+
+        // 初始化加载
+        loadCategories();
+        loadTags();
+        loadArticles();
+    </script>
+</body>
+</html> 

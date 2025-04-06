@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章详情</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .article-header {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .article-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .article-meta {
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+        }
+        .article-content {
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .article-content p {
+            margin-bottom: 15px;
+        }
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 20px;
+        }
+        .tag {
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+        .article-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .back-btn {
+            padding: 8px 16px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .back-btn:hover {
+            background-color: #5a6268;
+        }
+        .edit-btn {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .edit-btn:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="message" class="message"></div>
+        <div id="articleContent">
+            <!-- 文章内容将通过JavaScript动态加载 -->
+        </div>
+    </div>
+
+    <script>
+        // 检查登录状态
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/static/login.html';
+        }
+
+        // 获取文章ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+        
+        if (!articleId) {
+            window.location.href = '/static/knowledge.html';
+        }
+
+        // 加载文章内容
+        async function loadArticle() {
+            try {
+                const response = await fetch(`/knowledge/articles/${articleId}`);
+                if (!response.ok) {
+                    throw new Error('文章不存在');
+                }
+                
+                const article = await response.json();
+                
+                // 获取当前用户信息
+                const userResponse = await fetch('/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const currentUser = await userResponse.json();
+                
+                // 渲染文章内容
+                const articleContent = document.getElementById('articleContent');
+                articleContent.innerHTML = `
+                    <div class="article-header">
+                        <h1 class="article-title">${article.title}</h1>
+                        <div class="article-meta">
+                            <span>作者: ${article.author.username}</span>
+                            <span>分类: ${article.category.name}</span>
+                            <span>浏览: ${article.view_count}</span>
+                            <span>发布时间: ${new Date(article.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="article-content">
+                        ${article.content}
+                    </div>
+                    <div class="tag-list">
+                        ${article.tags.map(tag => `
+                            <span class="tag">${tag.name}</span>
+                        `).join('')}
+                    </div>
+                    <div class="article-actions">
+                        <a href="/static/knowledge.html" class="back-btn">返回列表</a>
+                        ${article.author_id === currentUser.id ? `
+                            <a href="/static/article-edit.html?id=${article.id}" class="edit-btn">编辑文章</a>
+                        ` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('加载文章失败:', error);
+                showMessage('加载文章失败，请检查网络连接', 'error');
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+
+        // 初始化
+        loadArticle();
+    </script>
+</body>
+</html> 
