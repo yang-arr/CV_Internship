@@ -314,7 +314,7 @@ class ModelService:
             model_path = os.path.join(model_dir, model_filename)
         else:
             # 尝试常见的模型文件名
-            common_names = ["best_model.pt", "1.pt", "model.pt", "checkpoint.pt"]
+            common_names = ["best_model.pt", "2.pt", "model.pt", "checkpoint.pt"]
             for name in common_names:
                 potential_path = os.path.join(model_dir, name)
                 if os.path.exists(potential_path):
