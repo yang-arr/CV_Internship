@@ -1,0 +1,2691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医疗专家问答系统 - "智绘影"MRI重建系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            /* 医疗增强型配色系统 */
+            --primary-color: #00607A; /* 深海蓝 - 主色调 - 传递专业感，降低视觉疲劳 */
+            --secondary-color: #E3F2FD; /* 医用蓝白 - 辅助色 - 提升屏幕可读性，减少眩光 */
+            --highlight-color: #00B0FF; /* 荧光蓝 - 高亮色 - 用于3D重建标记，符合DICOM标准 */
+            --alert-color: #D32F2F; /* 凝血红 - 警示区 - 紧急异常区域提示 */
+            --safe-color: #388E3C; /* 叶绿 - 安全区 - 正常指标标识 */
+            --background-color: #FAFAFA; /* 灰白 - 背景色 - 符合医疗显示器校准标准 */
+            --dark-bg-color: #121212; /* OLED黑 - 夜间模式背景 */
+            --amber-text: #FFC107; /* 琥珀色 - 夜间模式文字 */
+            --dark-card-bg: #1E1E1E; /* 深色卡片背景 */
+            --dark-text: #E0E0E0; /* 深色模式文本 */
+
+            /* 字体大小和行高 */
+            --font-size-base: 16px;
+            --line-height-base: 1.5;
+            --border-radius-base: 8px;
+            
+            /* 动画持续时间 */
+            --transition-slow: 0.5s;
+            --transition-medium: 0.3s;
+            --transition-fast: 0.15s;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+            background-color: var(--background-color);
+            background-image: linear-gradient(135deg, rgba(0, 96, 122, 0.03) 0%, rgba(0, 176, 255, 0.05) 100%);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: var(--line-height-base);
+            font-size: var(--font-size-base);
+            transition: all var(--transition-medium);
+            min-height: 100vh;
+        }
+        
+        /* 夜间模式样式 */
+        body.night-mode {
+            background-color: var(--dark-bg-color);
+            background-image: none;
+            color: var(--dark-text);
+        }
+        
+        .navbar {
+            background-color: var(--primary-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .navbar {
+            background-color: #002a36 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .navbar-brand, .nav-link {
+            color: white !important;
+            transition: all var(--transition-fast);
+        }
+        
+        .navbar-brand:hover, .nav-link:hover {
+            color: var(--secondary-color) !important;
+        }
+        
+        .nav-link.active {
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .nav-link.active::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background-color: var(--highlight-color);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .medical-header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
+            color: var(--primary-color);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 var(--border-radius-base) var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .night-mode .medical-header {
+            background: linear-gradient(135deg, rgba(0, 96, 122, 0.2) 0%, rgba(30, 30, 30, 0.4) 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            color: var(--amber-text);
+        }
+        
+        .medical-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+        
+        .medical-title {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            animation: fade-in 0.5s ease-out;
+        }
+
+        .chat-container {
+            height: 65vh;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: background-color var(--transition-medium);
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--secondary-color);
+        }
+        
+        /* 夜间模式聊天容器 */
+        .night-mode .chat-container {
+            background-color: #1E1E1E;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid #333;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 85%;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            animation: message-fade-in 0.3s ease-out;
+        }
+        
+        @keyframes message-fade-in {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background-color: var(--highlight-color);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+        
+        .night-mode .user-message {
+            background-color: #0D47A1;
+        }
+
+        .ai-message {
+            background-color: var(--secondary-color);
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 2px;
+        }
+        
+        .night-mode .ai-message {
+            background-color: #263238;
+            color: #E0E0E0;
+        }
+
+        .error-message {
+            background-color: var(--alert-color);
+            color: white;
+            margin-right: auto;
+            border-bottom-left-radius: 2px;
+        }
+
+        .typing-indicator {
+            display: none;
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background-color: var(--secondary-color);
+            width: fit-content;
+        }
+        
+        .night-mode .typing-indicator {
+            background-color: #263238;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: typing 1s infinite ease-in-out;
+        }
+        
+        .night-mode .typing-indicator span {
+            background-color: var(--amber-text);
+        }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        .system-message {
+            text-align: center;
+            color: #757575;
+            margin: 10px 0;
+            font-style: italic;
+            animation: fade-in 0.5s ease-out;
+        }
+        
+        .night-mode .system-message {
+            color: #9E9E9E;
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .retry-button {
+            background-color: var(--safe-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color var(--transition-fast);
+        }
+        
+        .retry-button:hover {
+            background-color: #2E7D32;
+        }
+        
+        /* 语音相关样式 */
+        .voice-controls-container {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .voice-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .voice-input-button {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .voice-input-button:hover {
+            background-color: #00506A;
+            transform: scale(1.05);
+        }
+        
+        .voice-input-button.listening {
+            background-color: var(--alert-color);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .voice-output-button {
+            background-color: #607D8B;
+            color: white;
+        }
+        
+        .voice-output-button.speaking {
+            background-color: var(--safe-color);
+        }
+        
+        .voice-output-button:hover {
+            background-color: #546E7A;
+            transform: scale(1.05);
+        }
+        
+        /* 停止朗读按钮 */
+        .voice-stop-button {
+            background-color: var(--alert-color);
+            color: white;
+        }
+        
+        .voice-stop-button:hover {
+            background-color: #C62828;
+            transform: scale(1.05);
+        }
+        
+        .voice-stop-button:not(.active) {
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7);
+            }
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(211, 47, 47, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
+            }
+        }
+        
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        
+        .voice-settings {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: white;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .voice-settings {
+            background-color: #1E1E1E;
+            border: 1px solid #333;
+        }
+        
+        .play-button {
+            color: var(--safe-color);
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1.2rem;
+            position: absolute;
+            right: 10px;
+            bottom: 5px;
+            transition: all var(--transition-fast);
+        }
+        
+        .play-button:hover {
+            transform: scale(1.2);
+        }
+        
+        .night-mode .play-button {
+            color: #81C784;
+        }
+        
+        .card {
+            margin-bottom: 20px;
+            transition: all var(--transition-medium);
+            border: none;
+            border-radius: var(--border-radius-base);
+            overflow: hidden;
+        }
+        
+        .night-mode .card {
+            background-color: #1E1E1E;
+            border: 1px solid #333;
+        }
+        
+        .card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .card-title {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .night-mode .card-title {
+            color: var(--amber-text);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .form-control, .btn {
+            border-radius: var(--border-radius-base);
+        }
+        
+        .form-control {
+            padding: 0.75rem 1rem;
+            border: 1px solid #E0E0E0;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        
+        .night-mode .form-control {
+            background-color: #333;
+            color: #E0E0E0;
+            border-color: #555;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 96, 122, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #00506A;
+            border-color: #00506A;
+            transform: translateY(-1px);
+        }
+        
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: fixed;
+            bottom: 75px; /* 调整位置，避免与辅助功能按钮重叠 */
+            right: 20px;
+            background-color: white;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .theme-toggle {
+            background-color: #333;
+        }
+        
+        .theme-toggle i {
+            font-size: 22px;
+            color: #555;
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .theme-toggle i {
+            color: var(--amber-text);
+        }
+        
+        .theme-toggle:hover {
+            transform: rotate(15deg);
+        }
+        
+        /* AI思考状态：脑电波可视化脉冲效果 */
+        .brain-wave {
+            width: 100%;
+            height: 20px;
+            margin: 10px 0;
+            display: none;
+            text-align: center;
+        }
+        
+        .brain-wave svg {
+            width: 100%;
+            height: 100%;
+            max-width: 300px;
+        }
+        
+        .brain-wave-path {
+            stroke: var(--highlight-color);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 2s linear infinite;
+        }
+        
+        .night-mode .brain-wave-path {
+            stroke: var(--amber-text);
+        }
+        
+        @keyframes dash {
+            from {
+                stroke-dashoffset: 1000;
+            }
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        /* 老年模式 - 高对比度 */
+        body.high-contrast {
+            --primary-color: #003D55;
+            --secondary-color: #FFFFFF;
+            --highlight-color: #0066CC;
+            --background-color: #FFFFFF;
+            font-size: 18px;
+            line-height: 1.8;
+        }
+        
+        .high-contrast .message {
+            border: 2px solid #000;
+        }
+        
+        .high-contrast .user-message {
+            background-color: #003D55;
+            color: white;
+        }
+        
+        .high-contrast .ai-message {
+            background-color: white;
+            color: black;
+        }
+        
+        /* 加载动画 - 医学插画风格 */
+        .medical-loader {
+            display: none;
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%2300607A" d="M50,10c22.1,0,40,17.9,40,40S72.1,90,50,90S10,72.1,10,50S27.9,10,50,10z"/><path fill="none" stroke="white" stroke-width="4" stroke-linecap="round" d="M25,50h50 M50,25v50"/></svg>');
+            background-size: contain;
+            animation: pulse-grow 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse-grow {
+            from {
+                transform: scale(0.8);
+                opacity: 0.7;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* 辅助功能指示器 */
+        .accessibility-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 75px; /* 调整位置，避免与主题切换按钮重叠 */
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0.8;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .accessibility-indicator:hover {
+            opacity: 1;
+        }
+        
+        /* 老年人辅助功能面板 */
+        .accessibility-panel {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            width: 250px;
+            display: none;
+        }
+        
+        .night-mode .accessibility-panel {
+            background-color: #1E1E1E;
+            border: 1px solid #333;
+        }
+        
+        .font-size-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .font-size-btn {
+            flex: 1;
+            padding: 5px;
+            border: none;
+            background-color: var(--secondary-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .font-size-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .night-mode .font-size-btn {
+            background-color: #333;
+            color: #E0E0E0;
+        }
+        
+        .night-mode .font-size-btn:hover {
+            background-color: var(--amber-text);
+            color: black;
+        }
+
+        .night-mode .message {
+            border: 1px solid #333;
+        }
+
+        .message-container {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        /* 思维链样式 */
+        .thinking-container {
+            background-color: rgba(227, 242, 253, 0.7);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--primary-color);
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .night-mode .thinking-container {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* 添加新样式：思考过程和AI内容之间的分隔 */
+        .ai-content {
+            margin-top: 15px;
+            position: relative;
+        }
+        
+        .ai-content::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, var(--primary-color) 0%, transparent 100%);
+            opacity: 0.3;
+        }
+        
+        .night-mode .ai-content::before {
+            background: linear-gradient(to right, var(--highlight-color) 0%, transparent 100%);
+        }
+        
+        .thinking-badge {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background-color: #78909C;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            font-style: normal;
+        }
+        
+        .night-mode .thinking-badge {
+            background-color: #607D8B;
+        }
+        
+        /* 思考中状态 */
+        .thinking-state {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0 5px 30px;
+            padding: 10px 20px;
+            background-color: #f3f3f3;
+            border-radius: 20px;
+            width: fit-content;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+            align-self: flex-start;
+        }
+        
+        .night-mode .thinking-state {
+            background-color: #2a2a2a;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .thinking-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0, 96, 122, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to {transform: rotate(360deg);}
+        }
+        
+        .thinking-text {
+            color: #555;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .night-mode .thinking-text {
+            color: #bbb;
+        }
+        
+        /* 代码块样式 */
+        .message pre {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 3px solid var(--primary-color);
+            margin: 10px 0;
+        }
+        
+        .night-mode .message pre {
+            background-color: #2d2d2d;
+            border-left: 3px solid var(--highlight-color);
+        }
+        
+        .message code {
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            font-size: 0.9em;
+        }
+        
+        /* Markdown样式 */
+        .message h1, .message h2, .message h3, .message h4 {
+            margin-top: 16px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .night-mode .message h1, 
+        .night-mode .message h2, 
+        .night-mode .message h3, 
+        .night-mode .message h4 {
+            color: var(--highlight-color);
+        }
+        
+        .message ul, .message ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        .message blockquote {
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 10px;
+            color: #666;
+            margin: 10px 0;
+        }
+        
+        .night-mode .message blockquote {
+            color: #aaa;
+        }
+        
+        /* 分隔的思考步骤 */
+        .thinking-step {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .night-mode .thinking-step {
+            border-bottom: 1px dashed #444;
+        }
+        
+        .thinking-step:last-child {
+            border-bottom: none;
+        }
+        
+        /* 增强的Markdown样式 */
+        .message table {
+            border-collapse: collapse;
+            margin: 15px 0;
+            width: 100%;
+        }
+        
+        .message th, .message td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .night-mode .message th, 
+        .night-mode .message td {
+            border-color: #444;
+        }
+        
+        .message th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .night-mode .message th {
+            background-color: #333;
+            color: #eee;
+        }
+        
+        .message pre {
+            background-color: #f5f5f5;
+            padding: 12px 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            border-left: 3px solid var(--primary-color);
+            margin: 15px 0;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            line-height: 1.5;
+        }
+        
+        .night-mode .message pre {
+            background-color: #2d2d2d;
+            border-left: 3px solid var(--highlight-color);
+        }
+        
+        .message code {
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            font-size: 0.9em;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .night-mode .message code {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .message pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: #333;
+        }
+        
+        .night-mode .message pre code {
+            color: #e0e0e0;
+        }
+        
+        /* 列表样式优化 */
+        .message ul, .message ol {
+            padding-left: 20px;
+            margin: 12px 0;
+        }
+        
+        .message ul li, .message ol li {
+            margin-bottom: 6px;
+        }
+        
+        /* 引用样式 */
+        .message blockquote {
+            border-left: 4px solid var(--secondary-color);
+            padding: 10px 15px;
+            color: #666;
+            margin: 15px 0;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: 3px;
+        }
+        
+        .night-mode .message blockquote {
+            color: #aaa;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* 链接样式 */
+        .message a {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--primary-color);
+            transition: all 0.2s ease;
+        }
+        
+        .message a:hover {
+            color: var(--highlight-color);
+            border-bottom: 1px solid var(--highlight-color);
+        }
+        
+        .night-mode .message a {
+            color: var(--highlight-color);
+            border-bottom: 1px dotted var(--highlight-color);
+        }
+        
+        .night-mode .message a:hover {
+            color: #4FC3F7;
+            border-bottom: 1px solid #4FC3F7;
+        }
+        
+        /* 确保思考中状态能在所有浏览器正确显示 */
+        #thinkingState {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #thinkingState.hidden {
+            opacity: 0;
+            visibility: hidden;
+            display: none;
+        }
+        
+        /* 思考中状态显示样式 */
+        .thinking-state {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            width: fit-content;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+            font-weight: 500;
+            border-bottom-left-radius: 2px;
+            margin-right: auto;
+        }
+        
+        .night-mode .thinking-state {
+            background-color: #263238;
+            color: var(--dark-text);
+        }
+        
+        .thinking-text {
+            font-size: 15px;
+        }
+        
+        .thinking-spinner {
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            border: 2px solid rgba(0, 96, 122, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .night-mode .thinking-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--highlight-color);
+        }
+        
+        /* 确保思考中的动画效果在各浏览器中一致 */
+        @-webkit-keyframes spin {
+            to { -webkit-transform: rotate(360deg); }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .thinking-spinner {
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            border: 2px solid rgba(0, 96, 122, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- 必须在页面开头引入Marked.js库，用于Markdown渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.3/dist/purify.min.js"></script>
+
+    <!-- 主题切换按钮 -->
+    <div class="theme-toggle" id="themeToggle" title="切换主题模式">
+        <i class="bi bi-moon-fill"></i>
+    </div>
+
+    <!-- 辅助功能指示器 -->
+    <div class="accessibility-indicator" id="accessibilityToggle">
+        <i class="bi bi-eye"></i> 辅助功能
+    </div>
+
+    <!-- 辅助功能面板 -->
+    <div class="accessibility-panel" id="accessibilityPanel">
+        <h6>辅助功能设置</h6>
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="highContrastToggle">
+            <label class="form-check-label" for="highContrastToggle">高对比度模式</label>
+        </div>
+        <p class="mb-2">字体大小调整：</p>
+        <div class="font-size-controls">
+            <button class="font-size-btn" id="decreaseFontBtn" title="减小字体">A-</button>
+            <button class="font-size-btn" id="resetFontBtn" title="重置字体">重置</button>
+            <button class="font-size-btn" id="increaseFontBtn" title="增大字体">A+</button>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-hospital me-2"></i> "智绘影"MRI重建系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reconstruction">MRI重建</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/medical-qa">医疗问答</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="#" id="logoutBtn" class="btn btn-outline-light">
+                        <i class="bi bi-box-arrow-right me-1"></i> 退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="medical-header">
+        <div class="container">
+            <h1 class="medical-title text-center">"智绘影"医疗专家问答系统</h1>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- 语音功能介绍卡片 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle-fill me-2"></i>语音交互功能</h5>
+                <p class="card-text">您现在可以通过语音与医疗助手进行交流：</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="bi bi-mic-fill text-primary me-2"></i> 点击麦克风按钮开始语音输入</li>
+                    <li class="mb-2"><i class="bi bi-volume-up-fill text-success me-2"></i> 点击语音播报按钮开启/关闭AI回答的语音朗读</li>
+                    <li class="mb-2"><i class="bi bi-play-fill text-success me-2"></i> 点击消息右下角的播放按钮可朗读该条消息</li>
+                </ul>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="autoReadToggle">
+                    <label class="form-check-label" for="autoReadToggle">自动朗读AI回答</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chat-container border" id="chatContainer">
+                    <!-- AI脑电波思考状态 -->
+                    <div class="brain-wave" id="brainWave">
+                        <svg viewBox="0 0 1000 100">
+                            <path class="brain-wave-path" d="M0,50 Q200,10 300,50 T600,50 T900,50" />
+                        </svg>
+                    </div>
+                    
+                    <!-- 医学加载动画 -->
+                    <div class="medical-loader" id="medicalLoader"></div>
+                    
+                    <!-- 思考中状态指示器 -->
+                    <div id="thinkingState" class="thinking-state hidden">
+                        <div class="thinking-spinner me-2"></div>
+                        <div class="thinking-text">思考中...</div>
+                    </div>
+                    
+                    <!-- 示例对话，包含思维链 -->
+                    <div class="message user-message">
+                        MRI对检测脑肿瘤有什么优势？
+                    </div>
+                    
+                    <div class="message ai-message">
+                        <div class="thinking-container">
+                            <div class="thinking-badge">思考过程</div>
+                            <div class="thinking-step">1. 首先我需要思考MRI相对于其他成像技术（如CT）在脑肿瘤检测中的关键优势。</div>
+                            <div class="thinking-step">2. MRI成像原理基于强磁场中氢质子的共振特性，这使它在软组织成像方面具有天然优势。</div>
+                            <div class="thinking-step">3. 脑肿瘤检测需要什么？高对比度、多角度评估、功能评估等，这些恰好是MRI的优势所在。</div>
+                            <div class="thinking-step">4. 还需要考虑临床应用中的实际情况，如安全性、随访需求等因素。</div>
+                            <div class="thinking-step">5. 综合以上分析，可以总结出MRI在脑肿瘤检测中的多项优势。</div>
+                        </div>
+                        
+                        <div class="ai-content">
+                            <h3>MRI在脑肿瘤检测中的优势</h3>
+                            <p>MRI（磁共振成像）在脑肿瘤检测方面具有显著优势：</p>
+                            <ul>
+                                <li><strong>软组织对比度高</strong>：MRI能提供极佳的软组织对比度，可以清晰区分脑组织中的正常和异常区域。</li>
+                                <li><strong>多参数成像</strong>：通过T1、T2加权、FLAIR等不同序列，可以从多角度显示肿瘤特征。</li>
+                                <li><strong>无电离辐射</strong>：相比CT，MRI不使用电离辐射，对患者更安全，特别适合需要长期随访的患者。</li>
+                                <li><strong>功能成像能力</strong>：如扩散加权成像(DWI)、灌注成像和功能MRI可评估肿瘤代谢活性和周围脑组织功能。</li>
+                                <li><strong>多平面成像</strong>：可以在任意平面获取高质量图像，而不需要重建。</li>
+                            </ul>
+                            <p>对于脑肿瘤的诊断与分级，MRI已成为首选的影像学检查方法。</p>
+                        </div>
+                        
+                        <i class="bi bi-play-fill play-button" data-text="MRI在脑肿瘤检测中的优势。MRI（磁共振成像）在脑肿瘤检测方面具有显著优势：软组织对比度高，MRI能提供极佳的软组织对比度，可以清晰区分脑组织中的正常和异常区域。多参数成像，通过T1、T2加权、FLAIR等不同序列，可以从多角度显示肿瘤特征。无电离辐射，相比CT，MRI不使用电离辐射，对患者更安全，特别适合需要长期随访的患者。功能成像能力，如扩散加权成像(DWI)、灌注成像和功能MRI可评估肿瘤代谢活性和周围脑组织功能。多平面成像，可以在任意平面获取高质量图像，而不需要重建。对于脑肿瘤的诊断与分级，MRI已成为首选的影像学检查方法。"></i>
+                    </div>
+                    
+                    <!-- 欢迎消息 -->
+                    <div class="ai-message message">
+                        <p>您好！我是您的AI医疗助手。请问有什么可以帮您？</p>
+                        <i class="bi bi-play-fill play-button" data-text="您好！我是您的AI医疗助手。请问有什么可以帮您？"></i>
+                    </div>
+                    
+                    <div class="typing-indicator ai-message message" id="typingIndicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="input-group mt-3">
+                    <input type="text" class="form-control" id="userInput" placeholder="请输入您的问题...">
+                    <button class="btn btn-primary" type="button" id="sendButton">
+                        <i class="bi bi-send me-1"></i>发送
+                    </button>
+                </div>
+                
+                <!-- 语音控制按钮 -->
+                <div class="voice-controls d-flex justify-content-center">
+                    <button class="voice-button voice-input-button" id="voiceInputButton" title="语音输入">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <button class="voice-button voice-output-button" id="voiceOutputButton" title="语音播报设置">
+                        <i class="bi bi-volume-up-fill"></i>
+                    </button>
+                    <button class="voice-button voice-stop-button" id="voiceStopButton" title="停止朗读">
+                        <i class="bi bi-stop-fill"></i>
+                    </button>
+                </div>
+                
+                <!-- 语音设置面板 -->
+                <div class="voice-settings" id="voiceSettings">
+                    <div class="form-group mb-3">
+                        <label for="voiceSelect">选择语音：</label>
+                        <select class="form-select" id="voiceSelect"></select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="rateRange">语速：</label>
+                        <input type="range" class="form-range" min="0.5" max="2" step="0.1" value="1" id="rateRange">
+                        <div class="d-flex justify-content-between">
+                            <span>慢</span>
+                            <span id="rateValue">1.0</span>
+                            <span>快</span>
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="pitchRange">音调：</label>
+                        <input type="range" class="form-range" min="0.5" max="2" step="0.1" value="1" id="pitchRange">
+                        <div class="d-flex justify-content-between">
+                            <span>低</span>
+                            <span id="pitchValue">1.0</span>
+                            <span>高</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-secondary w-100" id="testVoiceButton">测试语音</button>
+                </div>
+                
+                <div class="text-muted mt-3 text-center">
+                    <small>注意：本系统仅供参考，不能替代专业医生的诊断和建议。</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const voiceInputButton = document.getElementById('voiceInputButton');
+        const voiceOutputButton = document.getElementById('voiceOutputButton');
+        const voiceSettings = document.getElementById('voiceSettings');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const rateRange = document.getElementById('rateRange');
+        const pitchRange = document.getElementById('pitchRange');
+        const rateValue = document.getElementById('rateValue');
+        const pitchValue = document.getElementById('pitchValue');
+        const testVoiceButton = document.getElementById('testVoiceButton');
+        const autoReadToggle = document.getElementById('autoReadToggle');
+        const voiceStopButton = document.getElementById('voiceStopButton');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        const accessibilityToggle = document.getElementById('accessibilityToggle');
+        const accessibilityPanel = document.getElementById('accessibilityPanel');
+        const highContrastToggle = document.getElementById('highContrastToggle');
+        const increaseFontBtn = document.getElementById('increaseFontBtn');
+        const decreaseFontBtn = document.getElementById('decreaseFontBtn');
+        const resetFontBtn = document.getElementById('resetFontBtn');
+        const brainWave = document.getElementById('brainWave');
+        const medicalLoader = document.getElementById('medicalLoader');
+        const thinkingState = document.getElementById('thinkingState');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        let lastQuestion = ''; // 存储最后一个问题，用于重试功能
+        let isListening = false; // 是否正在进行语音识别
+        let isSpeaking = false; // 是否正在朗读中
+        let recognition = null; // 语音识别对象
+        let synth = window.speechSynthesis; // 语音合成对象
+        let voices = []; // 可用的语音列表
+        let currentUtterance = null; // 当前正在播放的语音
+        let currentAudio = null; // 当前正在播放的服务器音频
+        let baseFontSize = 16; // 基础字体大小
+        let isModelThinking = false; // 模型是否在思考中
+        
+        // 配置Marked.js选项
+        marked.setOptions({
+            breaks: true,           // 支持回车换行
+            gfm: true,              // 支持GitHub Flavored Markdown
+            headerIds: false,       // 不自动添加header IDs
+            mangle: false,          // 不修改@mentions
+            sanitize: false,        // 不进行消毒处理(我们使用DOMPurify)
+            smartLists: true,       // 使用更智能的列表行为
+            smartypants: true,      // 使用智能标点符号
+            xhtml: false,           // 不使用XHTML闭合标签
+            highlight: function(code, lang) {
+                // 添加语法高亮支持
+                return code;
+            }
+        });
+        
+        // 主题切换功能
+        function initThemeToggle() {
+            // 检查本地存储的主题偏好
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('night-mode');
+                themeIcon.classList.remove('bi-moon-fill');
+                themeIcon.classList.add('bi-sun-fill');
+            }
+            
+            // 添加主题切换事件
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('night-mode');
+                
+                if (document.body.classList.contains('night-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.remove('bi-moon-fill');
+                    themeIcon.classList.add('bi-sun-fill');
+                } else {
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.remove('bi-sun-fill');
+                    themeIcon.classList.add('bi-moon-fill');
+                }
+            });
+        }
+        
+        // 登出按钮事件处理
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // 清除本地存储中的认证信息
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('token_type');
+            localStorage.removeItem('username');
+            // 跳转到登录页面
+            window.location.href = '/login';
+        });
+        
+        // 辅助功能面板控制
+        function initAccessibilityControls() {
+            // 显示/隐藏辅助功能面板
+            accessibilityToggle.addEventListener('click', () => {
+                if (accessibilityPanel.style.display === 'block') {
+                    accessibilityPanel.style.display = 'none';
+                } else {
+                    accessibilityPanel.style.display = 'block';
+                }
+            });
+            
+            // 高对比度模式切换
+            highContrastToggle.addEventListener('change', () => {
+                if (highContrastToggle.checked) {
+                    document.body.classList.add('high-contrast');
+                    localStorage.setItem('highContrast', 'true');
+                } else {
+                    document.body.classList.remove('high-contrast');
+                    localStorage.setItem('highContrast', 'false');
+                }
+            });
+            
+            // 检查本地存储的高对比度偏好
+            if (localStorage.getItem('highContrast') === 'true') {
+                document.body.classList.add('high-contrast');
+                highContrastToggle.checked = true;
+            }
+            
+            // 字体大小控制
+            increaseFontBtn.addEventListener('click', () => {
+                baseFontSize += 2;
+                updateFontSize();
+            });
+            
+            decreaseFontBtn.addEventListener('click', () => {
+                if (baseFontSize > 14) {
+                    baseFontSize -= 2;
+                    updateFontSize();
+                }
+            });
+            
+            resetFontBtn.addEventListener('click', () => {
+                baseFontSize = 16;
+                updateFontSize();
+                localStorage.removeItem('fontSize');
+            });
+            
+            // 从本地存储读取字体大小
+            const savedFontSize = localStorage.getItem('fontSize');
+            if (savedFontSize) {
+                baseFontSize = parseInt(savedFontSize);
+                updateFontSize();
+            }
+        }
+        
+        // 更新字体大小
+        function updateFontSize() {
+            document.documentElement.style.setProperty('--font-size-base', `${baseFontSize}px`);
+            document.body.style.fontSize = `${baseFontSize}px`;
+            localStorage.setItem('fontSize', baseFontSize.toString());
+        }
+        
+        // 显示AI思考状态的脑电波效果
+        function showThinkingEffect(show) {
+            isModelThinking = show;
+            
+            // 确保所有思考相关的元素都正确显示或隐藏
+            if (show) {
+                // 先确保所有元素可见
+                thinkingState.classList.remove('hidden');
+                
+                // 找到最后一条用户消息，并在其后插入思考状态
+                const userMessages = document.querySelectorAll('.user-message');
+                if (userMessages.length > 0) {
+                    // 获取最近的用户消息
+                    const lastUserMessage = userMessages[userMessages.length - 1];
+                    
+                    // 将思考状态移动到用户消息之后
+                    if (lastUserMessage.nextSibling) {
+                        chatContainer.insertBefore(thinkingState, lastUserMessage.nextSibling);
+                    } else {
+                        chatContainer.appendChild(thinkingState);
+                    }
+                } else {
+                    // 如果没有用户消息，将思考状态添加到最上方
+                    if (chatContainer.firstChild) {
+                        chatContainer.insertBefore(thinkingState, chatContainer.firstChild);
+                    } else {
+                        chatContainer.appendChild(thinkingState);
+                    }
+                }
+                
+                thinkingState.style.display = 'flex';
+                
+                // 隐藏脑电波和医学加载器，专注于思考状态
+                brainWave.style.display = 'none';
+                medicalLoader.style.display = 'none';
+                
+                // 强制重排，确保CSS动画生效
+                void thinkingState.offsetWidth;
+                
+                // 滚动以确保思考状态可见
+                thinkingState.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            } else {
+                // 先添加隐藏类（触发过渡效果）
+                thinkingState.classList.add('hidden');
+                
+                // 延迟一点再隐藏其他元素，让过渡效果完成
+                setTimeout(() => {
+                    thinkingState.style.display = 'none';
+                    brainWave.style.display = 'none';
+                    medicalLoader.style.display = 'none';
+                }, 300);
+            }
+        }
+        
+        // 初始化语音设置
+        function initVoiceSettings() {
+            // 检查浏览器是否支持语音识别
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'zh-CN';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                
+                recognition.onstart = () => {
+                    isListening = true;
+                    voiceInputButton.classList.add('listening');
+                    addSystemMessage('正在聆听...');
+                };
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    addSystemMessage('语音识别结果：' + transcript);
+                    sendMessage();
+                };
+                
+                recognition.onend = () => {
+                    isListening = false;
+                    voiceInputButton.classList.remove('listening');
+                };
+                
+                recognition.onerror = (event) => {
+                    isListening = false;
+                    voiceInputButton.classList.remove('listening');
+                    addSystemMessage('语音识别错误：' + event.error);
+                };
+                
+                voiceInputButton.addEventListener('click', toggleSpeechRecognition);
+            } else {
+                voiceInputButton.disabled = true;
+                voiceInputButton.title = '您的浏览器不支持语音识别';
+                addSystemMessage('您的浏览器不支持语音识别功能');
+            }
+            
+            // 初始化语音合成
+            if ('speechSynthesis' in window) {
+                // 获取可用的语音
+                function loadVoices() {
+                    voices = synth.getVoices();
+                    
+                    // 清空选择框
+                    voiceSelect.innerHTML = '';
+                    
+                    // 优先找到中文语音
+                    let defaultVoice = voices.find(voice => voice.lang.includes('zh'));
+                    let defaultIndex = defaultVoice ? voices.indexOf(defaultVoice) : 0;
+                    
+                    voices.forEach((voice, i) => {
+                        const option = document.createElement('option');
+                        option.textContent = `${voice.name} (${voice.lang})`;
+                        option.setAttribute('data-lang', voice.lang);
+                        option.setAttribute('data-name', voice.name);
+                        option.value = i;
+                        voiceSelect.appendChild(option);
+                    });
+                    
+                    if (defaultIndex > 0) {
+                        voiceSelect.selectedIndex = defaultIndex;
+                    }
+                }
+                
+                if (synth.onvoiceschanged !== undefined) {
+                    synth.onvoiceschanged = loadVoices;
+                }
+                
+                // 立即尝试加载一次
+                loadVoices();
+                
+                // 设置语音输出按钮事件
+                voiceOutputButton.addEventListener('click', () => {
+                    if (voiceSettings.style.display === 'block') {
+                        voiceSettings.style.display = 'none';
+                    } else {
+                        voiceSettings.style.display = 'block';
+                    }
+                });
+                
+                // 更新语速值显示
+                rateRange.addEventListener('input', () => {
+                    rateValue.textContent = rateRange.value;
+                });
+                
+                // 更新音调值显示
+                pitchRange.addEventListener('input', () => {
+                    pitchValue.textContent = pitchRange.value;
+                });
+                
+                // 测试语音按钮
+                testVoiceButton.addEventListener('click', () => {
+                    speakText('您好，这是一条测试语音，我是您的AI医疗助手。');
+                });
+                
+                // 默认开启自动朗读
+                autoReadToggle.checked = true;
+            } else {
+                voiceOutputButton.disabled = true;
+                voiceOutputButton.title = '您的浏览器不支持语音合成';
+                autoReadToggle.disabled = true;
+                addSystemMessage('您的浏览器不支持语音合成功能');
+            }
+        }
+        
+        // 停止所有语音朗读
+        function stopSpeaking() {
+            // 停止浏览器API朗读
+            if (synth && synth.speaking) {
+                synth.cancel();
+            }
+            
+            // 停止服务器端音频播放
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
+            
+            // 重置状态
+            isSpeaking = false;
+            currentUtterance = null;
+            
+            // 更新UI状态
+            voiceOutputButton.classList.remove('speaking');
+            voiceStopButton.classList.remove('active');
+        }
+        
+        // 切换语音识别状态
+        function toggleSpeechRecognition() {
+            // 如果开始语音输入，先停止任何正在播放的语音
+            if (!isListening) {
+                stopSpeaking();
+            }
+            
+            if (isListening) {
+                recognition.stop();
+            } else {
+                if (recognition) {
+                    recognition.start();
+                } else {
+                    // 如果浏览器不支持语音识别，使用服务器端备用方案
+                    startServerSideRecording();
+                }
+            }
+        }
+        
+        // 服务器端语音识别（录制音频并上传到服务器）
+        function startServerSideRecording() {
+            // 检查是否支持MediaRecorder API
+            if (!navigator.mediaDevices || !window.MediaRecorder) {
+                addSystemMessage('您的浏览器不支持音频录制功能，请升级或更换浏览器。');
+                return;
+            }
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    isListening = true;
+                    voiceInputButton.classList.add('listening');
+                    addSystemMessage('正在录音...(请说完后点击麦克风按钮停止)');
+                    
+                    // 创建媒体录制器
+                    const mediaRecorder = new MediaRecorder(stream);
+                    let audioChunks = [];
+                    
+                    // 保存录制的音频块
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        audioChunks.push(event.data);
+                    });
+                    
+                    // 录制完成后处理
+                    mediaRecorder.addEventListener('stop', () => {
+                        // 停止所有音轨
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        // 创建音频 Blob
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        
+                        // 创建FormData对象并添加音频文件
+                        const formData = new FormData();
+                        formData.append('audio_file', audioBlob, 'recording.wav');
+                        
+                        // 显示正在处理信息
+                        addSystemMessage('正在处理您的语音...');
+                        
+                        // 发送到服务器进行处理
+                        fetch('/api/medical/speech-to-text', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.text) {
+                                // 显示识别结果
+                                userInput.value = data.text;
+                                addSystemMessage('语音识别结果：' + data.text);
+                                // 自动发送识别的文本
+                                sendMessage();
+                            } else if (data.error) {
+                                addSystemMessage('语音识别错误：' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('语音识别请求错误:', error);
+                            addSystemMessage('语音识别失败：' + error.message);
+                        })
+                        .finally(() => {
+                            isListening = false;
+                            voiceInputButton.classList.remove('listening');
+                        });
+                    });
+                    
+                    // 开始录音
+                    mediaRecorder.start();
+                    
+                    // 再次点击麦克风按钮停止录音
+                    voiceInputButton.onclick = () => {
+                        if (isListening && mediaRecorder.state === 'recording') {
+                            mediaRecorder.stop();
+                            // 恢复原始点击事件
+                            voiceInputButton.onclick = toggleSpeechRecognition;
+                        }
+                    };
+                })
+                .catch(error => {
+                    console.error('获取麦克风权限失败:', error);
+                    addSystemMessage('无法访问麦克风：' + error.message);
+                    isListening = false;
+                });
+        }
+        
+        // 文字转语音（使用服务器端API作为备用）
+        function speakText(text) {
+            // 如果已经在朗读，先停止
+            stopSpeaking();
+            
+            // 设置状态为正在朗读
+            isSpeaking = true;
+            voiceStopButton.classList.add('active');
+            
+            // 如果浏览器支持语音合成API，则使用浏览器API
+            if (synth && window.SpeechSynthesisUtterance) {                
+                // 创建语音对象
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // 设置语音参数
+                if (voices.length > 0) {
+                    utterance.voice = voices[voiceSelect.value];
+                }
+                utterance.rate = parseFloat(rateRange.value);
+                utterance.pitch = parseFloat(pitchRange.value);
+                utterance.lang = 'zh-CN';
+                
+                // 开始播放
+                currentUtterance = utterance;
+                synth.speak(utterance);
+                
+                // 添加事件
+                utterance.onstart = () => {
+                    voiceOutputButton.classList.add('speaking');
+                };
+                
+                utterance.onend = () => {
+                    voiceOutputButton.classList.remove('speaking');
+                    currentUtterance = null;
+                    isSpeaking = false;
+                    voiceStopButton.classList.remove('active');
+                };
+                
+                utterance.onerror = (event) => {
+                    console.error('语音合成错误:', event);
+                    voiceOutputButton.classList.remove('speaking');
+                    currentUtterance = null;
+                    isSpeaking = false;
+                    voiceStopButton.classList.remove('active');
+                    
+                    // 如果浏览器API失败，尝试使用服务器API
+                    useServerTTS(text);
+                };
+            } else {
+                // 浏览器不支持语音合成API，使用服务器端TTS
+                useServerTTS(text);
+            }
+        }
+        
+        // 使用服务器端文本转语音API
+        function useServerTTS(text) {
+            voiceOutputButton.classList.add('speaking');
+            voiceStopButton.classList.add('active');
+            isSpeaking = true;
+            
+            // 如果文本太长，分段处理
+            if (text.length > 500) {
+                const segments = splitTextIntoSegments(text);
+                playSegmentsSequentially(segments, 0);
+            } else {
+                playServerTTS(text)
+                    .finally(() => {
+                        voiceOutputButton.classList.remove('speaking');
+                        voiceStopButton.classList.remove('active');
+                        isSpeaking = false;
+                    });
+            }
+        }
+        
+        // 将长文本分段
+        function splitTextIntoSegments(text, maxLength = 500) {
+            const segments = [];
+            let currentIndex = 0;
+            
+            while (currentIndex < text.length) {
+                // 找到适合的分段点（句号、问号、感叹号或者到达最大长度）
+                let endIndex = Math.min(currentIndex + maxLength, text.length);
+                
+                if (endIndex < text.length) {
+                    // 尝试在句子结束处分段
+                    const punctuationIndex = Math.max(
+                        text.lastIndexOf('。', endIndex),
+                        text.lastIndexOf('？', endIndex),
+                        text.lastIndexOf('！', endIndex),
+                        text.lastIndexOf('.', endIndex),
+                        text.lastIndexOf('?', endIndex),
+                        text.lastIndexOf('!', endIndex)
+                    );
+                    
+                    if (punctuationIndex > currentIndex && punctuationIndex < endIndex) {
+                        endIndex = punctuationIndex + 1;
+                    }
+                }
+                
+                segments.push(text.substring(currentIndex, endIndex));
+                currentIndex = endIndex;
+            }
+            
+            return segments;
+        }
+        
+        // 顺序播放文本段
+        function playSegmentsSequentially(segments, index) {
+            if (index >= segments.length) {
+                voiceOutputButton.classList.remove('speaking');
+                voiceStopButton.classList.remove('active');
+                isSpeaking = false;
+                return;
+            }
+            
+            // 如果已经停止朗读，则中断播放序列
+            if (!isSpeaking) {
+                return;
+            }
+            
+            playServerTTS(segments[index])
+                .then(() => {
+                    // 播放下一段（如果仍处于朗读状态）
+                    if (isSpeaking) {
+                        playSegmentsSequentially(segments, index + 1);
+                    }
+                })
+                .catch(error => {
+                    console.error('播放语音段落错误:', error);
+                    voiceOutputButton.classList.remove('speaking');
+                    voiceStopButton.classList.remove('active');
+                    isSpeaking = false;
+                });
+        }
+        
+        // 调用服务器端TTS API播放文本
+        function playServerTTS(text) {
+            return new Promise((resolve, reject) => {
+                fetch('/api/medical/text-to-speech', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        lang: 'zh',
+                        slow: false
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('TTS服务响应错误');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // 创建音频元素播放
+                    const audioUrl = URL.createObjectURL(blob);
+                    const audio = new Audio(audioUrl);
+                    
+                    // 保存当前正在播放的音频对象
+                    currentAudio = audio;
+                    
+                    audio.onended = () => {
+                        URL.revokeObjectURL(audioUrl);
+                        currentAudio = null;
+                        resolve();
+                    };
+                    
+                    audio.onerror = (error) => {
+                        URL.revokeObjectURL(audioUrl);
+                        currentAudio = null;
+                        reject(error);
+                    };
+                    
+                    audio.play()
+                        .catch(error => {
+                            console.error('播放音频失败:', error);
+                            URL.revokeObjectURL(audioUrl);
+                            currentAudio = null;
+                            reject(error);
+                        });
+                })
+                .catch(error => {
+                    console.error('TTS请求错误:', error);
+                    reject(error);
+                });
+            });
+        }
+
+        // 添加系统消息
+        function addSystemMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'system-message';
+            messageDiv.textContent = text;
+            typingIndicator.before(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 处理播放按钮点击
+        function handlePlayButtonClick(button, text) {
+            event.stopPropagation();
+            
+            // 更新所有播放按钮
+            document.querySelectorAll('.play-button').forEach(btn => {
+                btn.className = 'bi bi-play-fill play-button';
+            });
+            
+            // 设置当前按钮为暂停图标
+            button.className = 'bi bi-pause-fill play-button';
+            
+            // 播放文本
+            speakText(text);
+            
+            // 监听状态变化
+            const checkInterval = setInterval(() => {
+                if (!isSpeaking) {
+                    button.className = 'bi bi-play-fill play-button';
+                    clearInterval(checkInterval);
+                }
+            }, 500);
+        }
+
+        // 解析并渲染思维链
+        function parseThinkingChain(text) {
+            // 检查是否已经包含思维链HTML结构
+            if (text.includes('<div class="thinking-container">') || text.includes('<div class=\'thinking-container\'>')) {
+                return { renderedText: text, hasThinkingChain: true };
+            }
+            
+            // 检查是否包含思考步骤的HTML结构，但没有完整的思考容器
+            if (text.includes('<div class="thinking-step">') || text.includes('<div class=\'thinking-step\'>')) {
+                // 提取所有的思考步骤
+                const stepRegex = /<div class=["']thinking-step["']>([\s\S]*?)<\/div>/g;
+                const steps = [];
+                let match;
+                while ((match = stepRegex.exec(text)) !== null) {
+                    steps.push(match[1].trim());
+                }
+                
+                if (steps.length > 0) {
+                    // 构建完整的思考容器HTML
+                    let thinkingHtml = '<div class="thinking-container">\n<div class="thinking-badge">思考过程</div>\n';
+                    steps.forEach(step => {
+                        thinkingHtml += `<div class="thinking-step">${step}</div>\n`;
+                    });
+                    thinkingHtml += '</div>';
+                    
+                    // 从原文中删除思考步骤部分
+                    let contentText = text.replace(stepRegex, '');
+                    
+                    // 返回清理后的内容和思考过程HTML
+                    return { 
+                        renderedText: contentText + '\n\n' + thinkingHtml, 
+                        hasThinkingChain: true 
+                    };
+                }
+            }
+            
+            // 检查是否包含思维链标记
+            if (!text.includes("<think>") && !text.includes("</think>")) {
+                return { renderedText: text, hasThinkingChain: false };
+            }
+            
+            let hasThinkingChain = false;
+            let renderedText = text;
+            
+            // 替换思维链部分
+            renderedText = renderedText.replace(/<think>([\s\S]*?)<\/think>/g, (match, content) => {
+                hasThinkingChain = true;
+                
+                // 将思维链内容分成步骤 - 支持数字序号、星号和短横线的列表标记
+                const steps = content.split(/\n(?=\d+\.|\*|\-)/g).filter(step => step.trim());
+                
+                let stepsHtml = '';
+                steps.forEach(step => {
+                    // 转义HTML标签，防止XSS攻击
+                    const safeStep = step.trim()
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#039;');
+                    
+                    stepsHtml += `<div class="thinking-step">${safeStep}</div>`;
+                });
+                
+                return `
+                <div class="thinking-container">
+                    <div class="thinking-badge">思考过程</div>
+                    ${stepsHtml}
+                </div>`;
+            });
+            
+            return { renderedText, hasThinkingChain };
+        }
+        
+        // 添加消息
+        function addMessage(text, type = 'ai') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            if (type === 'user') {
+                // 用户消息直接显示文本
+                messageDiv.textContent = text;
+            } else if (type === 'ai') {
+                try {
+                    // 尝试从AI响应中检测并生成思考过程
+                    text = detectAndGenerateThinking(text);
+                    
+                    // 检查是否包含不完整的HTML标签
+                    text = fixIncompleteHtml(text);
+                    
+                    // AI消息需要处理思维链和渲染Markdown
+                    // 首先提取思考过程部分
+                    let thinkingHtml = '';
+                    let contentHtml = text;
+                    
+                    // 尝试提取思考过程
+                    const thinkingPattern = extractThinkingProcess(text);
+                    if (thinkingPattern) {
+                        if (thinkingPattern.thinkingHtml) {
+                            // 如果有HTML格式的思考过程
+                            thinkingHtml = thinkingPattern.thinkingHtml;
+                            contentHtml = thinkingPattern.contentHtml;
+                        } else if (thinkingPattern.thinkingSteps) {
+                            // 如果只有思考步骤
+                            contentHtml = thinkingPattern.contentHtml;
+                            // thinkingHtml将在下面创建思考容器时使用
+                            thinkingHtml = thinkingPattern;
+                        }
+                    }
+                    
+                    // 使用marked渲染剩余的Markdown内容
+                    const contentMarkdown = marked.parse(contentHtml.trim());
+                    
+                    // 设置主要内容（Markdown部分）
+                    messageDiv.innerHTML = DOMPurify.sanitize(contentMarkdown, {
+                        ALLOWED_TAGS: [
+                            'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
+                            'ul', 'ol', 'li', 'a', 'strong', 'em', 'code', 'pre', 
+                            'blockquote', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+                            'br', 'span', 'img', 'b', 'i', 'u', 'sup', 'sub', 'hr', 
+                            'section', 'mark', 'del', 'ins', 'dl', 'dt', 'dd'
+                        ],
+                        ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'id', 'style', 'data-*', 'title', 'target'],
+                        ADD_ATTR: ['class', 'target'],
+                        ADD_CLASS: {
+                            'pre': ['code-block'],
+                            'code': ['language-*']
+                        },
+                        FORBID_TAGS: ['style', 'script'],
+                        FORBID_ATTR: ['onerror', 'onload', 'onclick']
+                    });
+                    
+                    // 如果有思考过程，手动创建思考过程元素
+                    if (thinkingHtml) {
+                        // 创建思考容器
+                        const thinkingContainer = document.createElement('div');
+                        thinkingContainer.className = 'thinking-container';
+                        
+                        // 创建思考徽章
+                        const thinkingBadge = document.createElement('div');
+                        thinkingBadge.className = 'thinking-badge';
+                        thinkingBadge.textContent = '思考过程';
+                        thinkingContainer.appendChild(thinkingBadge);
+                        
+                        // 解析步骤
+                        const thinkingSteps = extractThinkingSteps(thinkingHtml);
+                        
+                        // 如果没有提取到步骤但有"思考过程"标记，尝试从原始响应中提取
+                        if (thinkingSteps.length === 0 && text.includes('思考过程')) {
+                            const thinkingPart = text.substring(text.indexOf('思考过程')).trim();
+                            const processedSteps = structureThinkingProcess(thinkingPart);
+                            
+                            if (processedSteps.length > 0) {
+                                processedSteps.forEach(step => {
+                                    const stepElement = document.createElement('div');
+                                    stepElement.className = 'thinking-step';
+                                    stepElement.textContent = step;
+                                    thinkingContainer.appendChild(stepElement);
+                                });
+                            } else {
+                                // 应急处理：如果仍然没有提取到有效步骤，创建一些基本的思考步骤
+                                // 从主内容分析生成思考步骤
+                                const sentences = contentHtml.split(/。|\.|\?|？|!|！/)
+                                    .filter(s => s.trim().length > 10) // 只使用有意义的句子
+                                    .slice(0, 3);  // 最多取前3句
+                                
+                                if (sentences.length > 0) {
+                                    // 添加标准的思考步骤
+                                    addStandardThinkingStep(thinkingContainer, "1. 首先理解用户提出的问题，分析其核心需求。");
+                                    
+                                    // 根据内容添加中间步骤
+                                    sentences.forEach((sentence, index) => {
+                                        addStandardThinkingStep(thinkingContainer, 
+                                            `${index + 2}. 分析关键信息"${sentence.trim().substring(0, 30)}..."，整理相关医学知识。`);
+                                    });
+                                    
+                                    // 添加总结步骤
+                                    addStandardThinkingStep(thinkingContainer, 
+                                        `${sentences.length + 2}. 整合上述信息，形成详细的医学解答。`);
+                                } else {
+                                    // 如果连句子都没有提取到，添加基础思考步骤
+                                    addStandardThinkingStep(thinkingContainer, "1. 理解问题，确定回答方向。");
+                                    addStandardThinkingStep(thinkingContainer, "2. 收集医学知识，整理相关信息。");
+                                    addStandardThinkingStep(thinkingContainer, "3. 组织医学知识点，确保准确性。");
+                                    addStandardThinkingStep(thinkingContainer, "4. 形成系统性回答，注重医学专业性。");
+                                }
+                            }
+                        } else {
+                            // 使用提取的步骤
+                            thinkingSteps.forEach(step => {
+                                const stepElement = document.createElement('div');
+                                stepElement.className = 'thinking-step';
+                                stepElement.textContent = step;
+                                thinkingContainer.appendChild(stepElement);
+                            });
+                        }
+                        
+                        // 先将思考过程插入到消息中，确保思考过程显示在正文前面
+                        if (thinkingContainer.querySelectorAll('.thinking-step').length > 0) {
+                            // 获取当前消息的内容
+                            const currentContent = messageDiv.innerHTML;
+                            // 清空当前消息
+                            messageDiv.innerHTML = '';
+                            // 先插入思考容器
+                            messageDiv.appendChild(thinkingContainer);
+                            // 创建新元素存放原始内容
+                            const contentDiv = document.createElement('div');
+                            contentDiv.className = 'ai-content';
+                            contentDiv.innerHTML = currentContent;
+                            // 将原始内容添加到思考过程之后
+                            messageDiv.appendChild(contentDiv);
+                        }
+                    }
+                    
+                    // 为AI消息添加播放按钮
+                    const playButton = document.createElement('i');
+                    playButton.className = 'bi bi-play-fill play-button';
+                    
+                    // 移除思考过程的HTML，以便语音朗读不包含思考过程
+                    let textToSpeak = text;
+                    if (text.includes('<div class="thinking-container">')) {
+                        textToSpeak = text.replace(/<div class="thinking-container">[\s\S]*?<\/div><\/div>/g, '');
+                    } else if (text.includes('<think>')) {
+                        textToSpeak = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+                    }
+                    
+                    // 去掉HTML标签，只保留纯文本用于朗读
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = textToSpeak;
+                    textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
+                    
+                    playButton.setAttribute('data-text', textToSpeak);
+                    
+                    // 为播放按钮添加点击事件
+                    playButton.addEventListener('click', function(event) {
+                        const textToSpeak = this.getAttribute('data-text');
+                        handlePlayButtonClick(this, textToSpeak);
+                    });
+                    
+                    messageDiv.appendChild(playButton);
+                    
+                    // 如果开启了自动朗读，则自动播放（排除思维链部分）
+                    if (autoReadToggle.checked) {
+                        setTimeout(() => speakText(textToSpeak), 500);
+                    }
+                } catch (error) {
+                    console.error('消息渲染错误:', error);
+                    messageDiv.textContent = text; // 出错时回退到原始文本
+                }
+            } else if (type === 'error') {
+                messageDiv.textContent = text;
+                
+                const retryButton = document.createElement('button');
+                retryButton.className = 'retry-button';
+                retryButton.textContent = '重试';
+                retryButton.onclick = () => {
+                    if (lastQuestion) {
+                        sendMessage(lastQuestion);
+                    }
+                };
+                messageDiv.appendChild(retryButton);
+            }
+            
+            typingIndicator.before(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 添加渐进式渲染动画效果
+            if (type === 'ai') {
+                messageDiv.style.opacity = '0';
+                messageDiv.style.transform = 'translateY(10px)';
+                
+                // 使用RAF优化动画性能
+                requestAnimationFrame(() => {
+                    messageDiv.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    requestAnimationFrame(() => {
+                        messageDiv.style.opacity = '1';
+                        messageDiv.style.transform = 'translateY(0)';
+                    });
+                });
+            }
+        }
+
+        async function sendMessage(text = null) {
+            const messageText = text || userInput.value.trim();
+            if (!messageText) return;
+            
+            lastQuestion = messageText; // 保存问题以供重试
+            
+            // 如果不是重试，则清空输入框并显示用户消息
+            if (!text) {
+                userInput.value = '';
+                addMessage(messageText, 'user');
+            }
+
+            // 禁用输入和发送按钮
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            
+            // 隐藏打字指示器，以免混淆
+            typingIndicator.style.display = 'none';
+            
+            // 确保思考效果显示在用户消息之后
+            showThinkingEffect(true);
+            
+            // 确保滚动到顶部，让用户看到思考状态
+            chatContainer.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
+            try {
+                // 等待短暂时间确保动画显示
+                await new Promise(resolve => setTimeout(resolve, 150));
+                
+                const response = await fetch('/api/medical/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text: messageText,
+                        include_thinking: true // 请求包含思维链
+                    })
+                });
+
+                const data = await response.json();
+                
+                // 隐藏思考动画
+                showThinkingEffect(false);
+                
+                if (response.ok && data.response) {
+                    // 直接显示响应，不需要预处理
+                    addMessage(data.response, 'ai');
+                } else {
+                    const errorMessage = data.error || '服务器响应错误';
+                    const errorDetails = data.details ? `\n详细信息：${data.details}` : '';
+                    addMessage(`错误：${errorMessage}${errorDetails}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showThinkingEffect(false);
+                addMessage(`网络错误：${error.message}`, 'error');
+            }
+
+            // 重新启用输入和发送按钮
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
+        }
+
+        // 检查Ollama服务状态
+        async function checkOllamaService() {
+            const MODEL_NAME = "hf.co/TimeLoad/deepseek-r1-medical:latest";
+            try {
+                const response = await fetch('http://localhost:11434/api/tags');
+                if (!response.ok) {
+                    addMessage('警告：Ollama服务可能未启动，请确保服务正在运行。', 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                const models = data.models || [];
+                if (!models.some(model => model.name === MODEL_NAME)) {
+                    addMessage(`警告：未找到所需的模型 "${MODEL_NAME}"，请确保已经下载该模型。\n可以使用命令：ollama pull "${MODEL_NAME}" 来下载模型。`, 'error');
+                }
+            } catch (error) {
+                addMessage('警告：无法连接到Ollama服务，请确保服务已启动。', 'error');
+            }
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('load', () => {
+            checkOllamaService();
+            initVoiceSettings();
+            initThemeToggle();
+            initAccessibilityControls();
+            
+            // 添加停止朗读按钮事件
+            voiceStopButton.addEventListener('click', stopSpeaking);
+            
+            // 初始化欢迎消息的播放按钮
+            document.querySelectorAll('.play-button').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    const textToSpeak = this.getAttribute('data-text') || this.parentElement.textContent.trim();
+                    handlePlayButtonClick(this, textToSpeak);
+                });
+            });
+
+            // 添加键盘快捷键支持
+            document.addEventListener('keydown', (e) => {
+                // Ctrl+Enter: 发送消息
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
+                
+                // Ctrl+Shift+M: 语音输入
+                if (e.ctrlKey && e.shiftKey && e.key === 'M') {
+                    e.preventDefault();
+                    toggleSpeechRecognition();
+                }
+                
+                // Ctrl+Shift+S: 停止朗读
+                if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                    e.preventDefault();
+                    if (isSpeaking) {
+                        stopSpeaking();
+                    }
+                }
+                
+                // Ctrl+Shift+D: 切换夜间模式
+                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    e.preventDefault();
+                    themeToggle.click();
+                }
+            });
+        });
+
+        sendButton.addEventListener('click', () => sendMessage());
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 修复不完整的HTML代码
+        function fixIncompleteHtml(text) {
+            // 检查是否包含不完整的</div>标签
+            if (text.includes('</div>') && !text.includes('<div')) {
+                text = text.replace('</div>', '');
+            }
+            
+            // 检查是否有思考过程标记但没有内容
+            if (text.includes('思考过程') && !text.includes('<div class="thinking-container">')) {
+                // 提取思考过程前的内容
+                const contentBeforeThinking = text.substring(0, text.indexOf('思考过程')).trim();
+                
+                // 提取"思考过程"之后的内容
+                let thinkingContent = text.substring(text.indexOf('思考过程') + 4).trim();
+                
+                // 如果内容为空或只有"</div>"，则根据上下文生成思考步骤
+                if (!thinkingContent || thinkingContent === '</div>') {
+                    // 从主内容中提取关键内容生成思考步骤
+                    const sentences = contentBeforeThinking.split(/。|\.|\?|？|!|！/)
+                        .filter(s => s.trim().length > 5) // 只使用有意义的句子
+                        .slice(0, 3);  // 最多取前3句
+                    
+                    if (sentences.length > 0) {
+                        // 构建简单的思考步骤
+                        let thinkingHtml = '<div class="thinking-container"><div class="thinking-badge">思考过程</div>';
+                        
+                        // 第一步：理解问题
+                        thinkingHtml += `<div class="thinking-step">1. 首先理解用户提出的问题，分析其核心需求。</div>`;
+                        
+                        // 第二步：基于句子分析
+                        sentences.forEach((sentence, index) => {
+                            thinkingHtml += `<div class="thinking-step">${index + 2}. ${sentence.trim()}，这一点很重要。</div>`;
+                        });
+                        
+                        // 最后一步：总结
+                        thinkingHtml += `<div class="thinking-step">${sentences.length + 2}. 整合上述信息，得出完整的回答。</div>`;
+                        
+                        thinkingHtml += '</div>';
+                        
+                        // 替换原文中的思考过程部分
+                        text = contentBeforeThinking + '\n\n' + thinkingHtml;
+                    }
+                } else {
+                    // 思考过程有内容，但不是标准格式，进行标准化处理
+                    // 移除可能的</div>标签
+                    thinkingContent = thinkingContent.replace('</div>', '').trim();
+                    
+                    // 将思考内容转换为结构化格式
+                    const thinkingSteps = structureThinkingProcess(thinkingContent);
+                    
+                    if (thinkingSteps.length > 0) {
+                        let thinkingHtml = '<div class="thinking-container"><div class="thinking-badge">思考过程</div>';
+                        thinkingSteps.forEach(step => {
+                            thinkingHtml += `<div class="thinking-step">${step}</div>`;
+                        });
+                        thinkingHtml += '</div>';
+                        
+                        // 替换原文中的思考过程部分
+                        text = contentBeforeThinking + '\n\n' + thinkingHtml;
+                    }
+                }
+            }
+            
+            // 处理图中显示的特殊情况："</div>"直接显示在文本中
+            if (text.includes('思考过程') && text.includes('</div>')) {
+                // 尝试提取可能包含思考步骤的部分
+                const thinkingSection = text.substring(text.indexOf('思考过程'));
+                // 创建适当的HTML结构
+                const steps = thinkingSection
+                    .replace('</div>', '')
+                    .replace('思考过程', '')
+                    .split('\n')
+                    .filter(line => line.trim().length > 0)
+                    .map(line => line.trim());
+                
+                if (steps.length > 0) {
+                    // 构建正确的思考过程HTML
+                    let thinkingHtml = '<div class="thinking-container"><div class="thinking-badge">思考过程</div>';
+                    steps.forEach((step, index) => {
+                        thinkingHtml += `<div class="thinking-step">${(index + 1)}. ${step}</div>`;
+                    });
+                    thinkingHtml += '</div>';
+                    
+                    // 从原文中移除思考部分
+                    const contentText = text.substring(0, text.indexOf('思考过程')).trim();
+                    
+                    // 返回修复后的文本
+                    return contentText + '\n\n' + thinkingHtml;
+                }
+            }
+            
+            // 修复thinking-container的闭合问题
+            if (text.includes('<div class="thinking-container">') && 
+                !text.includes('</div></div>') && 
+                text.match(/<div class="thinking-container">/g).length !== text.match(/<\/div>/g).length) {
+                // 如果有thinking-container但缺少闭合标签
+                text = text.replace(/<div class="thinking-container">[\s\S]*?$/, function(match) {
+                    // 计算需要添加的闭合标签数量
+                    const openDivs = (match.match(/<div/g) || []).length;
+                    const closeDivs = (match.match(/<\/div>/g) || []).length;
+                    const missingCloseDivs = openDivs - closeDivs;
+                    
+                    // 添加缺少的闭合标签
+                    if (missingCloseDivs > 0) {
+                        return match + '</div>'.repeat(missingCloseDivs);
+                    }
+                    return match;
+                });
+            }
+            
+            return text;
+        }
+        
+        // 提取思考过程，处理各种格式情况
+        function extractThinkingProcess(text) {
+            // 特殊情况：有"思考过程"字样但没有内容结构化的情况
+            if (text.includes('思考过程') && !text.includes('<div class="thinking-container">') && !text.includes('<div class="thinking-step">')) {
+                const contentPart = text.substring(0, text.indexOf('思考过程')).trim();
+                const thinkingPart = text.substring(text.indexOf('思考过程')).trim();
+                
+                // 分析思考过程部分
+                const lines = thinkingPart.split('\n')
+                    .filter(line => line.trim() && line.trim() !== '思考过程' && line.trim() !== '</div>')
+                    .map(line => line.trim());
+                
+                if (lines.length > 0) {
+                    return {
+                        thinkingSteps: lines,
+                        contentHtml: contentPart
+                    };
+                } else {
+                    // 如果没有找到有效的步骤行，则尝试用句号分割
+                    const sentences = thinkingPart.replace('思考过程', '').replace('</div>', '')
+                        .split(/。|\./)
+                        .filter(sent => sent.trim())
+                        .map(sent => sent.trim());
+                    
+                    if (sentences.length > 0) {
+                        return {
+                            thinkingSteps: sentences,
+                            contentHtml: contentPart
+                        };
+                    }
+                }
+            }
+            
+            // 检查是否是HTML格式的思考过程
+            if (text.includes('<div class="thinking-container">')) {
+                // 尝试匹配完整的思考容器
+                const thinkingMatch = text.match(/<div class="thinking-container">[\s\S]*?<\/div><\/div>/);
+                if (thinkingMatch) {
+                    return {
+                        thinkingHtml: thinkingMatch[0],
+                        contentHtml: text.replace(thinkingMatch[0], '')
+                    };
+                }
+                
+                // 尝试匹配不完整的思考容器（可能缺少闭合标签）
+                const incompleteMatch = text.match(/<div class="thinking-container">[\s\S]*?(<\/div>)?$/);
+                if (incompleteMatch) {
+                    // 提取思考步骤
+                    const stepsMatch = text.match(/<div class="thinking-step">[\s\S]*?<\/div>/g);
+                    if (stepsMatch && stepsMatch.length > 0) {
+                        const steps = stepsMatch.map(step => {
+                            return step.replace(/<div class="thinking-step">([\s\S]*?)<\/div>/, '$1').trim();
+                        });
+                        
+                        // 从原文中移除思考容器部分
+                        let contentText = text;
+                        contentText = contentText.replace(/<div class="thinking-container">[\s\S]*/, '');
+                        
+                        return {
+                            thinkingSteps: steps,
+                            contentHtml: contentText.trim()
+                        };
+                    } else {
+                        // 如果没有找到思考步骤，尝试从文本中提取
+                        const containerContent = incompleteMatch[0].replace('<div class="thinking-container">', '').replace('<div class="thinking-badge">思考过程</div>', '').replace('</div>', '');
+                        const lines = containerContent.split('\n')
+                            .filter(line => line.trim())
+                            .map(line => line.trim());
+                        
+                        if (lines.length > 0) {
+                            let contentText = text;
+                            contentText = contentText.replace(/<div class="thinking-container">[\s\S]*/, '');
+                            
+                            return {
+                                thinkingSteps: lines,
+                                contentHtml: contentText.trim()
+                            };
+                        }
+                    }
+                }
+            }
+            
+            // 检查是否只包含思考步骤标签
+            if (text.includes('<div class="thinking-step">')) {
+                const stepMatches = text.match(/<div class="thinking-step">[\s\S]*?<\/div>/g);
+                if (stepMatches) {
+                    const steps = stepMatches.map(step => {
+                        return step.replace(/<div class="thinking-step">([\s\S]*?)<\/div>/, '$1').trim();
+                    });
+                    
+                    // 从原文中移除思考步骤
+                    let contentText = text;
+                    stepMatches.forEach(match => {
+                        contentText = contentText.replace(match, '');
+                    });
+                    
+                    return {
+                        thinkingSteps: steps,
+                        contentHtml: contentText.trim()
+                    };
+                }
+            }
+            
+            // 检查<think>标签格式
+            if (text.includes('<think>') && text.includes('</think>')) {
+                const thinkMatch = text.match(/<think>([\s\S]*?)<\/think>/);
+                if (thinkMatch) {
+                    const thinkContent = thinkMatch[1];
+                    const steps = thinkContent.split(/\n(?=\d+\.|\*|\-)/g)
+                        .filter(step => step.trim())
+                        .map(step => step.trim());
+                    
+                    return {
+                        thinkingSteps: steps,
+                        contentHtml: text.replace(thinkMatch[0], '')
+                    };
+                }
+            }
+            
+            return null;
+        }
+        
+        // 将纯文本思考过程转换为结构化的步骤
+        function structureThinkingProcess(text) {
+            if (!text || typeof text !== 'string') return [];
+            
+            // 移除常见的前缀
+            text = text.replace(/^思考过程[:：]?\s*/i, '');
+            
+            // 尝试各种分割方式
+            let steps = [];
+            
+            // 方法1: 使用数字编号分割 (例如: "1. 步骤一")
+            const numberedSteps = text.match(/\d+\.\s+[^\n]+/g);
+            if (numberedSteps && numberedSteps.length > 0) {
+                return numberedSteps.map(step => step.trim());
+            }
+            
+            // 方法2: 使用换行符分割
+            steps = text.split('\n')
+                .filter(line => line.trim() && line.trim() !== '</div>')
+                .map((line, index) => {
+                    // 如果行没有数字前缀，添加一个
+                    if (!/^\d+\./.test(line)) {
+                        return `${index + 1}. ${line.trim()}`;
+                    }
+                    return line.trim();
+                });
+                
+            if (steps.length > 0) {
+                return steps;
+            }
+            
+            // 方法3: 使用句号分割
+            steps = text.split(/。|\./)
+                .filter(sentence => sentence.trim())
+                .map((sentence, index) => `${index + 1}. ${sentence.trim()}`);
+                
+            if (steps.length > 0) {
+                return steps;
+            }
+            
+            // 如果以上都失败，将整个文本作为一个步骤返回
+            if (text.trim()) {
+                return [`1. ${text.trim()}`];
+            }
+            
+            return [];
+        }
+        
+        // 修改extractThinkingSteps函数，使用structureThinkingProcess处理纯文本
+        function extractThinkingSteps(thinkingText) {
+            // 如果已经有步骤数组
+            if (Array.isArray(thinkingText)) {
+                return thinkingText;
+            }
+            
+            // 如果是对象且包含thinkingSteps
+            if (thinkingText && thinkingText.thinkingSteps) {
+                return thinkingText.thinkingSteps;
+            }
+            
+            // 如果是HTML字符串，尝试提取步骤
+            if (typeof thinkingText === 'string') {
+                // 检查是否包含thinking-step标签
+                const stepMatches = thinkingText.match(/<div class="thinking-step">([\s\S]*?)<\/div>/g);
+                if (stepMatches) {
+                    return stepMatches.map(step => {
+                        return step.replace(/<div class="thinking-step">([\s\S]*?)<\/div>/, '$1').trim();
+                    });
+                }
+                
+                // 如果是纯文本，使用structureThinkingProcess函数处理
+                return structureThinkingProcess(thinkingText);
+            }
+            
+            // 默认返回空数组
+            return [];
+        }
+
+        // 尝试从AI响应中检测并生成思考过程
+        function detectAndGenerateThinking(text) {
+            // 如果已经包含思考过程结构，则不处理
+            if (text.includes('<div class="thinking-container">') || 
+                text.includes('<div class="thinking-step">') ||
+                text.includes('<think>')) {
+                return text;
+            }
+            
+            // 检查响应中是否有明确的思考过程标记
+            if (text.includes('思考过程')) {
+                return text; // 已经在fixIncompleteHtml中处理了
+            }
+            
+            // 尝试检测可能包含思考过程的部分
+            const thinkingIndicators = [
+                '我的推理过程', '分析步骤', '思考如下', '我的分析', '推理过程',
+                '解题思路', '解决思路', '思路如下', '解答过程', '思维过程',
+                '推导过程', '我是这样思考的', '考虑因素'
+            ];
+            
+            for (const indicator of thinkingIndicators) {
+                if (text.includes(indicator)) {
+                    // 提取思考内容
+                    const parts = text.split(indicator);
+                    if (parts.length >= 2) {
+                        // 提取思考内容的部分
+                        let thinkingPart = parts[1].trim();
+                        // 限制提取的范围，避免提取太多
+                        if (thinkingPart.length > 500) {
+                            thinkingPart = thinkingPart.substring(0, 500) + '...';
+                        }
+                        
+                        // 组织成思考步骤
+                        const steps = structureThinkingProcess(thinkingPart);
+                        
+                        if (steps.length > 0) {
+                            // 构建思考过程HTML
+                            let thinkingHtml = '<div class="thinking-container"><div class="thinking-badge">思考过程</div>';
+                            steps.forEach(step => {
+                                thinkingHtml += `<div class="thinking-step">${step}</div>`;
+                            });
+                            thinkingHtml += '</div>';
+                            
+                            // 替换原始内容，并添加思考过程HTML
+                            const contentBeforeIndicator = parts[0].trim();
+                            
+                            return contentBeforeIndicator + '\n\n' + thinkingHtml;
+                        }
+                    }
+                }
+            }
+            
+            return text;
+        }
+
+        // 添加标准的思考步骤元素
+        function addStandardThinkingStep(container, text) {
+            const stepElement = document.createElement('div');
+            stepElement.className = 'thinking-step';
+            stepElement.textContent = text;
+            container.appendChild(stepElement);
+        }
+    </script>
+</body>
+</html> 

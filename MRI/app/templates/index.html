@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"智绘影"MRI重建系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <style>
+        :root {
+            /* 医疗增强型配色系统 */
+            --primary-color: #00607A; /* 深海蓝 - 主色调 - 传递专业感，降低视觉疲劳 */
+            --secondary-color: #E3F2FD; /* 医用蓝白 - 辅助色 - 提升屏幕可读性，减少眩光 */
+            --highlight-color: #00B0FF; /* 荧光蓝 - 高亮色 - 用于3D重建标记，符合DICOM标准 */
+            --alert-color: #D32F2F; /* 凝血红 - 警示区 - 紧急异常区域提示 */
+            --safe-color: #388E3C; /* 叶绿 - 安全区 - 正常指标标识 */
+            --background-color: #FAFAFA; /* 灰白 - 背景色 - 符合医疗显示器校准标准 */
+            --dark-bg-color: #121212; /* OLED黑 - 夜间模式背景 */
+            --amber-text: #FFC107; /* 琥珀色 - 夜间模式文字 */
+            --dark-card-bg: #1E1E1E; /* 深色卡片背景 */
+            --dark-text: #E0E0E0; /* 深色模式文本 */
+
+            /* 字体大小和行高 */
+            --font-size-base: 16px;
+            --line-height-base: 1.5;
+            --border-radius-base: 8px;
+            
+            /* 动画持续时间 */
+            --transition-slow: 0.5s;
+            --transition-medium: 0.3s;
+            --transition-fast: 0.15s;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+            background-color: var(--background-color);
+            background-image: linear-gradient(135deg, rgba(0, 96, 122, 0.03) 0%, rgba(0, 176, 255, 0.05) 100%);
+            margin: 0;
+            padding: 0;
+            line-height: var(--line-height-base);
+            font-size: var(--font-size-base);
+            transition: all var(--transition-medium);
+            min-height: 100vh;
+        }
+        
+        body.night-mode {
+            background-color: var(--dark-bg-color);
+            background-image: none;
+            color: var(--dark-text);
+        }
+        
+        .navbar {
+            background-color: var(--primary-color) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .navbar {
+            background-color: #002a36 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .navbar-brand, .nav-link {
+            color: white !important;
+            transition: all var(--transition-fast);
+        }
+        
+        .navbar-brand:hover, .nav-link:hover {
+            color: var(--secondary-color) !important;
+        }
+        
+        .nav-link.active {
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .nav-link.active::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background-color: var(--highlight-color);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all var(--transition-medium);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            animation: fade-in 0.5s ease-out;
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .night-mode .card {
+            background-color: var(--dark-card-bg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #333;
+        }
+        
+        .card-header {
+            border-bottom: none;
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover .card-header::before {
+            transform: translateX(0);
+        }
+        
+        .card-header.bg-primary {
+            background: linear-gradient(to right, var(--primary-color), #00779e) !important;
+        }
+        
+        .card-header.bg-success {
+            background: linear-gradient(to right, var(--safe-color), #4caf50) !important;
+        }
+        
+        .card-header.bg-info {
+            background: linear-gradient(to right, var(--highlight-color), #40c4ff) !important;
+        }
+        
+        .card-header.bg-dark {
+            background: linear-gradient(to right, #263238, #455a64) !important;
+        }
+        
+        .card-header.bg-secondary {
+            background: linear-gradient(to right, #455a64, #607d8b) !important;
+        }
+        
+        .night-mode .card-header.bg-primary {
+            background: linear-gradient(to right, #004a60, #00607A) !important;
+        }
+        
+        .night-mode .card-header.bg-success {
+            background: linear-gradient(to right, #2e7d32, #388E3C) !important;
+        }
+        
+        .night-mode .card-header.bg-info {
+            background: linear-gradient(to right, #0091ea, #00B0FF) !important;
+        }
+        
+        .night-mode .card-header.bg-dark {
+            background: linear-gradient(to right, #1a1a1a, #263238) !important;
+        }
+        
+        .night-mode .card-header.bg-secondary {
+            background: linear-gradient(to right, #37474f, #455a64) !important;
+        }
+        
+        .card-body {
+            padding: 1.25rem;
+        }
+        
+        .form-control, .form-select {
+            border-radius: var(--border-radius-base);
+            padding: 0.6rem 1rem;
+            border: 1px solid #E0E0E0;
+            transition: all var(--transition-fast);
+        }
+        
+        .night-mode .form-control, .night-mode .form-select {
+            background-color: #333;
+            border-color: #555;
+            color: var(--dark-text);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 96, 122, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: var(--border-radius-base);
+            transition: all var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .btn-primary:hover::after {
+            transform: translateX(0);
+        }
+        
+        .btn-primary:hover {
+            background-color: #00506A;
+            border-color: #00506A;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress {
+            height: 0.8rem;
+            border-radius: 1rem;
+            background-color: #E0E0E0;
+            overflow: hidden;
+        }
+        
+        .night-mode .progress {
+            background-color: #333;
+        }
+        
+        .progress-bar {
+            background-color: var(--highlight-color);
+            transition: width 0.3s ease;
+        }
+        
+        .image-container {
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius-base);
+            padding: 1rem;
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .image-container {
+            background-color: #2a2a2a;
+        }
+        
+        .image-preview {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #ccc;
+            border-radius: var(--border-radius-base);
+            overflow: hidden;
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .image-preview {
+            border-color: #555;
+        }
+        
+        .metric-card {
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius-base);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .metric-card {
+            background-color: #2a2a2a;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .night-mode .metric-value {
+            color: var(--highlight-color);
+        }
+        
+        .alert-info {
+            background-color: rgba(0, 176, 255, 0.1);
+            border-color: rgba(0, 176, 255, 0.2);
+            color: var(--highlight-color);
+            border-radius: var(--border-radius-base);
+        }
+        
+        .night-mode .alert-info {
+            background-color: rgba(0, 176, 255, 0.15);
+            border-color: rgba(0, 176, 255, 0.3);
+            color: #40c4ff;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .modal-content {
+            border-radius: var(--border-radius-base);
+            border: none;
+            overflow: hidden;
+        }
+        
+        .night-mode .modal-content {
+            background-color: var(--dark-card-bg);
+            color: var(--dark-text);
+        }
+        
+        .modal-header {
+            border-bottom: none;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .night-mode .modal-header {
+            background-color: #004a60;
+        }
+        
+        .modal-footer {
+            border-top: none;
+        }
+        
+        .night-mode .modal-footer {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-outline-light:hover {
+            transform: translateY(-2px);
+        }
+        
+        .badge {
+            padding: 0.5rem 0.7rem;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all var(--transition-medium);
+        }
+        
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .theme-toggle {
+            background-color: #333;
+        }
+        
+        .theme-toggle i {
+            font-size: 22px;
+            color: #555;
+            transition: all var(--transition-medium);
+        }
+        
+        .night-mode .theme-toggle i {
+            color: var(--amber-text);
+        }
+        
+        .theme-toggle:hover {
+            transform: rotate(15deg);
+        }
+        
+        /* 辅助功能按钮和面板 */
+        .accessibility-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 75px;
+            background-color: #4285f4;
+            color: white;
+            border-radius: 20px;
+            padding: 6px 15px;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .night-mode .accessibility-indicator {
+            background-color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .accessibility-indicator i {
+            margin-right: 5px;
+            font-size: 16px;
+        }
+        
+        .accessibility-indicator:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .accessibility-panel {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            width: 250px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            z-index: 999;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        
+        .night-mode .accessibility-panel {
+            background-color: #2c3e50;
+            color: #f1f1f1;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .font-size-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .font-size-btn {
+            background-color: #f1f1f1;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .night-mode .font-size-btn {
+            background-color: #34495e;
+            color: #f1f1f1;
+        }
+        
+        .font-size-btn:hover {
+            background-color: #e3e3e3;
+        }
+        
+        .night-mode .font-size-btn:hover {
+            background-color: #2c3e50;
+        }
+        
+        /* 高对比度模式 */
+        body.high-contrast {
+            background-color: #000 !important;
+            color: #fff !important;
+        }
+        
+        body.high-contrast .navbar {
+            background-color: #000 !important;
+            border-bottom: 1px solid #fff !important;
+        }
+        
+        body.high-contrast .card {
+            background-color: #000 !important;
+            border: 1px solid #fff !important;
+        }
+        
+        body.high-contrast h1, 
+        body.high-contrast h2, 
+        body.high-contrast h3, 
+        body.high-contrast h4, 
+        body.high-contrast h5, 
+        body.high-contrast h6,
+        body.high-contrast p,
+        body.high-contrast .card-text {
+            color: #fff !important;
+        }
+        
+        body.high-contrast .btn-primary {
+            background-color: #fff !important;
+            color: #000 !important;
+            border-color: #fff !important;
+        }
+        
+        body.high-contrast .bi {
+            color: #fff !important;
+        }
+    </style>
+    
+    <!-- 认证检查脚本，必须在页面开始时执行 -->
+    <script>
+        // 检查认证状态
+        (function() {
+            const token = localStorage.getItem('access_token');
+            const tokenType = localStorage.getItem('token_type');
+            
+            console.log('检查认证状态: ', Boolean(token && tokenType));
+            
+            if (!token || !tokenType) {
+                console.log('未找到有效令牌，重定向到登录页面');
+                window.location.href = '/login';
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- 主题切换按钮 -->
+    <div class="theme-toggle" id="themeToggle" title="切换主题模式">
+        <i class="bi bi-moon-fill"></i>
+    </div>
+
+    <!-- 辅助功能指示器 -->
+    <div class="accessibility-indicator" id="accessibilityToggle">
+        <i class="bi bi-eye"></i> 辅助功能
+    </div>
+
+    <!-- 辅助功能面板 -->
+    <div class="accessibility-panel" id="accessibilityPanel">
+        <h6>辅助功能设置</h6>
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="highContrastToggle">
+            <label class="form-check-label" for="highContrastToggle">高对比度模式</label>
+        </div>
+        <p class="mb-2">字体大小调整：</p>
+        <div class="font-size-controls">
+            <button class="font-size-btn" id="decreaseFontBtn" title="减小字体">A-</button>
+            <button class="font-size-btn" id="resetFontBtn" title="重置字体">重置</button>
+            <button class="font-size-btn" id="increaseFontBtn" title="增大字体">A+</button>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-images me-2"></i>"智绘影"MRI重建系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard"><i class="bi bi-house-door me-1"></i>首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/medical-qa"><i class="bi bi-chat-dots me-1"></i>医疗问答</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">
+                            <i class="bi bi-info-circle me-1"></i>关于
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="navbar-text me-3 d-none d-lg-inline">
+                        <i class="bi bi-cpu me-1"></i>基于隐式神经表示的MRI重建
+                    </span>
+                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right me-1"></i>退出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 左侧面板 -->
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-upload me-2"></i>上传图像
+                    </div>
+                    <div class="card-body">
+                        <form id="uploadForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="imageFile" class="form-label">选择图像文件</label>
+                                <input class="form-control" type="file" id="imageFile" name="file" accept="image/*">
+                            </div>
+                            <div class="mb-3">
+                                <label for="modelSelect" class="form-label">选择重建模型</label>
+                                <select class="form-select" id="modelSelect" name="model_id">
+                                    <option value="" selected disabled>-- 请选择模型 --</option>
+                                    <!-- 模型选项将通过JS动态加载 -->
+                                </select>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" type="submit" id="reconstructBtn">
+                                    <i class="bi bi-arrow-repeat me-1"></i>开始重建
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <i class="bi bi-graph-up me-2"></i>模型信息
+                    </div>
+                    <div class="card-body" id="modelInfo">
+                        <p class="text-muted text-center">请先选择模型</p>
+                        <!-- 模型信息将通过JS动态加载 -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-info-circle me-2"></i>系统状态
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>连接状态:</span>
+                            <span id="connectionStatus" class="badge bg-secondary">未连接</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>重建任务:</span>
+                            <span id="taskStatus" class="badge bg-secondary">无任务</span>
+                        </div>
+                        <div class="mb-2">
+                            <label for="progressBar" class="form-label">重建进度:</label>
+                            <div class="progress">
+                                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧内容区 -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <i class="bi bi-images me-2"></i>图像预览
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="image-container">
+                                    <p class="text-center mb-2">原始图像</p>
+                                    <div class="image-preview" id="originalImagePreview">
+                                        <p class="text-muted text-center">尚未上传图像</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="image-container">
+                                    <p class="text-center mb-2">重建结果</p>
+                                    <div class="image-preview" id="reconstructedImagePreview">
+                                        <p class="text-muted text-center">尚未执行重建</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <i class="bi bi-bar-chart me-2"></i>性能指标
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <h5 class="text-center">PSNR</h5>
+                                    <p class="metric-value text-center" id="psnrValue">-</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <h5 class="text-center">SSIM</h5>
+                                    <p class="metric-value text-center" id="ssimValue">-</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-card">
+                                    <h5 class="text-center">NSE</h5>
+                                    <p class="metric-value text-center" id="nseValue">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info" id="executionTimeInfo">
+                                    <i class="bi bi-clock me-1"></i>执行时间: <span id="executionTimeValue">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关于模态框 -->
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="aboutModalLabel">关于"智绘影"MRI重建系统</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>基于隐式神经表示（INR）的二维MRI图像重建系统</h4>
+                    <p>
+                        随着医疗隐私保护意识的增强以及MRI成像过程中采集时间较长的限制，传统深度学习重建方法因依赖大量配对的欠采样与全采样数据，
+                        面临数据获取成本高、泛化能力不足等问题。为应对上述挑战，本系统引入隐式神经表示（INR）技术，设计了一种基于自监督学习的
+                        二维MRI图像重建方法。在显著提升高度欠采样条件下图像重建质量的同时，该方法亦有助于提高MRI系统的采集效率，具有良好的临床应用前景。
+                    </p>
+                    <h5>主要功能：</h5>
+                    <ul>
+                        <li>上传MRI图像并进行重建</li>
+                        <li>选择不同的重建模型</li>
+                        <li>查看重建结果和评估指标</li>
+                        <li>实时监控重建进度</li>
+                    </ul>
+                    <h5>技术实现：</h5>
+                    <ul>
+                        <li>前端：HTML、CSS、JavaScript</li>
+                        <li>后端：FastAPI</li>
+                        <li>算法：基于隐式神经表示（INR）的MRI重建</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载中遮罩 -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+        <p class="text-light mt-2">正在处理，请稍候...</p>
+    </div>
+
+    <!-- JavaScript库 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuid.min.js"></script>
+    <script>
+        // 主题切换功能
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        // 辅助功能相关元素
+        const accessibilityToggle = document.getElementById('accessibilityToggle');
+        const accessibilityPanel = document.getElementById('accessibilityPanel');
+        const highContrastToggle = document.getElementById('highContrastToggle');
+        const increaseFontBtn = document.getElementById('increaseFontBtn');
+        const decreaseFontBtn = document.getElementById('decreaseFontBtn');
+        const resetFontBtn = document.getElementById('resetFontBtn');
+        let baseFontSize = 16; // 基础字体大小
+        
+        // 检查本地存储中的主题偏好
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('night-mode');
+            themeIcon.classList.remove('bi-moon-fill');
+            themeIcon.classList.add('bi-sun-fill');
+        }
+        
+        // 主题切换事件监听
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('night-mode');
+            
+            if (document.body.classList.contains('night-mode')) {
+                localStorage.setItem('theme', 'dark');
+                themeIcon.classList.remove('bi-moon-fill');
+                themeIcon.classList.add('bi-sun-fill');
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeIcon.classList.remove('bi-sun-fill');
+                themeIcon.classList.add('bi-moon-fill');
+            }
+        });
+        
+        // 辅助功能面板控制
+        accessibilityToggle.addEventListener('click', () => {
+            if (accessibilityPanel.style.display === 'block') {
+                accessibilityPanel.style.display = 'none';
+            } else {
+                accessibilityPanel.style.display = 'block';
+            }
+        });
+        
+        // 高对比度模式切换
+        highContrastToggle.addEventListener('change', () => {
+            if (highContrastToggle.checked) {
+                document.body.classList.add('high-contrast');
+                localStorage.setItem('highContrast', 'true');
+            } else {
+                document.body.classList.remove('high-contrast');
+                localStorage.setItem('highContrast', 'false');
+            }
+        });
+        
+        // 检查本地存储的高对比度偏好
+        if (localStorage.getItem('highContrast') === 'true') {
+            document.body.classList.add('high-contrast');
+            highContrastToggle.checked = true;
+        }
+        
+        // 字体大小控制
+        increaseFontBtn.addEventListener('click', () => {
+            baseFontSize += 2;
+            updateFontSize();
+        });
+        
+        decreaseFontBtn.addEventListener('click', () => {
+            if (baseFontSize > 14) {
+                baseFontSize -= 2;
+                updateFontSize();
+            }
+        });
+        
+        resetFontBtn.addEventListener('click', () => {
+            baseFontSize = 16;
+            updateFontSize();
+            localStorage.removeItem('fontSize');
+        });
+        
+        // 从本地存储读取字体大小
+        const savedFontSize = localStorage.getItem('fontSize');
+        if (savedFontSize) {
+            baseFontSize = parseInt(savedFontSize);
+            updateFontSize();
+        }
+        
+        // 更新字体大小
+        function updateFontSize() {
+            document.documentElement.style.setProperty('--font-size-base', `${baseFontSize}px`);
+            document.body.style.fontSize = `${baseFontSize}px`;
+            localStorage.setItem('fontSize', baseFontSize.toString());
+        }
+    
+        // 检查认证状态并在请求中添加令牌
+        function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            const tokenType = localStorage.getItem('token_type');
+            if (!token || !tokenType) {
+                console.log('checkAuth: 未找到有效令牌，重定向到登录页面');
+                window.location.href = '/login';
+                return false;
+            }
+            console.log('checkAuth: 认证有效');
+            return true;
+        }
+        
+        // 登出按钮事件处理
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            // 清除本地存储中的认证信息
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('token_type');
+            localStorage.removeItem('username');
+            // 跳转到登录页面
+            window.location.href = '/login';
+        });
+
+        // 以下是"智绘影"MRI重建系统原有的JS代码
+        // ... 在此保留原有功能代码 ...
+    </script>
+</body>
+</html> 
