@@ -43,7 +43,7 @@ app.add_middleware(
 )
 
 # 导入路由和服务
-from MRI.app.api import reconstruction, model_management, upload, websocket, auth, medical_qa
+from MRI.app.api import reconstruction, model_management, upload, websocket, auth, medical_qa, online_training
 from MRI.app.services.db import create_tables, get_db
 from MRI.app.services.auth import get_current_user, SECRET_KEY, ALGORITHM
 from MRI.app.models.user import User
@@ -53,8 +53,9 @@ app.include_router(reconstruction.router, prefix="/api/reconstruction", tags=["�
 app.include_router(model_management.router, prefix="/api/models", tags=["模型管理"])
 app.include_router(upload.router, prefix="/api/upload", tags=["文件上传"])
 app.include_router(websocket.router, prefix="/api", tags=["WebSocket"])
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(medical_qa.router, prefix="/api/medical", tags=["医疗问答"])
+app.include_router(online_training.router, prefix="/api/online-training", tags=["online_training"])
 
 # 启动事件
 @app.on_event("startup")

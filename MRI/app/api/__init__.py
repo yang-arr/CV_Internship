@@ -6,6 +6,7 @@ MRI重建系统API模块
 - upload: 文件上传API
 - websocket: WebSocket API
 - auth: 用户认证API
+- online_training: 在线训练API
 """
 
-from . import reconstruction, model_management, upload, websocket, auth 
+from . import reconstruction, model_management, upload, websocket, auth, online_training 
