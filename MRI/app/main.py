@@ -53,9 +53,9 @@ app.include_router(reconstruction.router, prefix="/api/reconstruction", tags=["�
 app.include_router(model_management.router, prefix="/api/models", tags=["模型管理"])
 app.include_router(upload.router, prefix="/api/upload", tags=["文件上传"])
 app.include_router(websocket.router, prefix="/api", tags=["WebSocket"])
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(auth.router, tags=["认证"])
 app.include_router(medical_qa.router, prefix="/api/medical", tags=["医疗问答"])
-app.include_router(online_training.router, prefix="/api/online-training", tags=["online_training"])
+app.include_router(online_training.router, prefix="/api/online-training", tags=["在线训练"])
 
 # 启动事件
 @app.on_event("startup")

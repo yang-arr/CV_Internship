@@ -8,6 +8,8 @@ class AuthManager {
         this.tokenTypeKey = 'token_type';
         this.usernameKey = 'username';
         this.initialized = false;
+        this.apiBaseUrl = '/api';
+        this.tokenUrl = '/api/auth/token'; // 确保这个URL与后端路由匹配
         
         // 受保护的路径列表，访问这些路径需要登录
         this.protectedPaths = [

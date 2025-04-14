@@ -16,9 +16,8 @@ from MRI.app.schemas.user import UserCreate, UserResponse, Token
 # 创建日志记录器
 logger = logging.getLogger(__name__)
 
-# 创建路由器
+# 创建路由器 - 移除前缀，因为它在main.py中已添加
 router = APIRouter(
-    prefix="/api/auth",
     tags=["认证"],
     responses={404: {"description": "未找到"}},
 )
@@ -79,12 +78,14 @@ async def login_for_access_token(
     )
     
     # 创建响应
+    token_data = {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "username": user.username
+    }
+    
     response = JSONResponse(
-        content={
-            "access_token": access_token,
-            "token_type": "bearer",
-            "username": user.username
-        }
+        content=token_data
     )
     
     # 设置cookie

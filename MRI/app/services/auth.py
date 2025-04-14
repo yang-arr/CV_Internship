@@ -87,14 +87,14 @@ async def get_token_from_cookie_or_header(
     logger.info("尝试从Cookie或Header获取令牌")
     
     # 首先尝试从cookie获取
-    if access_token:
+    if access_token and isinstance(access_token, str):
         logger.info("从Cookie获取到令牌")
         if access_token.startswith("Bearer "):
             return access_token.replace("Bearer ", "")
         return access_token
     
     # 然后尝试从header获取
-    if authorization:
+    if authorization and isinstance(authorization, str):
         logger.info("从Header获取到令牌")
         if authorization.startswith("Bearer "):
             return authorization.replace("Bearer ", "")
@@ -121,10 +121,8 @@ async def get_current_user(
         logger.warning("未找到认证令牌")
         raise credentials_exception
     
-    # 确保token是字符串类型
-    if not isinstance(token, str):
-        logger.error(f"令牌类型错误: {type(token).__name__}, 期望类型: str")
-        raise credentials_exception
+    # 输出令牌信息便于调试
+    logger.info(f"处理令牌: {type(token).__name__}")
     
     try:
         # 解码令牌
