@@ -122,18 +122,18 @@ class ModelService:
         if os.path.exists(self.models_dir):
             model_dirs = [d for d in os.scandir(self.models_dir) if d.is_dir() and not d.name.startswith('__')]
             
-            logger.info(f"Scanning model directories in {self.models_dir}")
+            logger.info(f"扫描模型目录 {self.models_dir}，找到 {len(model_dirs)} 个模型目录")
             for model_dir in model_dirs:
                 model_id = model_dir.name
-                logger.info(f"Found model directory: {model_id}")
+                logger.info(f"处理模型目录: {model_id}")
                 model_info = self.get_model_info(model_id)
                 
                 if model_info:
-                    logger.info(f"Adding model to list: {model_id}")
+                    logger.info(f"添加模型到列表: {model_id}")
                     models_list.append(model_info)
                 else:
                     # 如果没有找到配置文件，创建一个基于默认配置的模型信息
-                    logger.warning(f"No info.json found for model: {model_id}, using fallback")
+                    logger.warning(f"未找到模型 {model_id} 的info.json文件，使用备用信息")
                     basic_info = self._filter_model_info_for_api(
                         self._ensure_complete_model_info({
                             "name": model_id,
@@ -144,9 +144,9 @@ class ModelService:
                     )
                     models_list.append(basic_info)
             
-            logger.info(f"Found {len(models_list)} models in {self.models_dir}")
+            logger.info(f"在 {self.models_dir} 中找到 {len(models_list)} 个模型")
         else:
-            logger.warning(f"Models directory not found: {self.models_dir}")
+            logger.warning(f"模型目录不存在: {self.models_dir}")
             # 如果模型目录不存在，至少返回默认模型
             models_list.append(self._filter_model_info_for_api(self.default_model_config))
             
@@ -288,7 +288,7 @@ class ModelService:
             模型实例
         """
         if model_id in self.loaded_models:
-            logger.info(f"Returning cached model: {model_id}")
+            logger.info(f"返回缓存的模型: {model_id}")
             return self.loaded_models[model_id]
         
         # 根据模型ID确定模型文件路径
@@ -305,20 +305,32 @@ class ModelService:
                     model_info = json.load(f)
                     if "model_filename" in model_info:
                         model_filename = model_info["model_filename"]
-                        logger.info(f"Model filename from info.json: {model_filename}")
+                        logger.info(f"从info.json获取模型文件名: {model_filename}")
             except Exception as e:
-                logger.warning(f"Could not read model filename from info.json: {e}")
+                logger.warning(f"无法从info.json读取模型文件名: {e}")
         
         # 查找模型文件
         if model_filename and os.path.exists(os.path.join(model_dir, model_filename)):
             model_path = os.path.join(model_dir, model_filename)
+            logger.info(f"通过model_filename找到模型文件: {model_path}")
+        elif model_filename:
+            # 如果model_filename是带有路径的，可能是相对于根目录的路径，需要特殊处理
+            model_filename_parts = model_filename.split('/')
+            if len(model_filename_parts) > 1 and model_filename_parts[0] == 'models':
+                # 尝试处理类似 "models/xxx.pt" 这样的路径
+                relative_path = os.path.join(*model_filename_parts[1:])
+                potential_path = os.path.join(model_dir, relative_path)
+                if os.path.exists(potential_path):
+                    model_path = potential_path
+                    logger.info(f"找到模型文件: {model_path}")
         else:
             # 尝试常见的模型文件名
-            common_names = ["best_model.pt", "1.pt", "model.pt", "checkpoint.pt"]
+            common_names = ["best_model.pt", "1.pt", "model.pt", "checkpoint.pt", "best_model1.pt"]
             for name in common_names:
                 potential_path = os.path.join(model_dir, name)
                 if os.path.exists(potential_path):
                     model_path = potential_path
+                    logger.info(f"使用常见文件名找到模型文件: {model_path}")
                     break
         
         # 如果在模型目录中找不到模型文件，尝试默认位置
@@ -333,6 +345,7 @@ class ModelService:
                 for path in default_paths:
                     if os.path.exists(path):
                         model_path = path
+                        logger.info(f"在默认位置找到模型文件: {model_path}")
                         break
         
         if not model_path or not os.path.exists(model_path):
@@ -346,8 +359,29 @@ class ModelService:
             # 添加 Fullmodel 到安全全局变量列表
             torch.serialization.add_safe_globals([Fullmodel])
             
-            # 加载模型参数和配置，设置 weights_only=False
-            model = torch.load(model_path, map_location=self.device, weights_only=False)
+            # 尝试不同的加载方式
+            try:
+                # 先尝试直接加载整个模型，显式设置weights_only=False
+                model = torch.load(model_path, map_location=self.device, weights_only=False)
+                logger.info("成功加载完整模型")
+            except Exception as e:
+                logger.warning(f"加载完整模型失败，尝试只加载权重: {e}")
+                # 如果失败，尝试只加载权重
+                # 创建一个空模型实例
+                model = Fullmodel(
+                    encoding_mode="fourier",
+                    in_features=2,
+                    out_features=20,
+                    coordinate_scales=[1.0, 1.0],
+                    mlp_hidden_features=256,
+                    mlp_hidden_layers=4,
+                    omega_0=30,
+                    activation="sine"
+                )
+                # 加载权重，显式设置weights_only=True
+                state_dict = torch.load(model_path, map_location=self.device, weights_only=True)
+                model.load_state_dict(state_dict)
+                logger.info("成功加载模型权重")
             
             # 确保模型在正确的设备上并设置为评估模式
             model = model.to(self.device)
@@ -360,6 +394,8 @@ class ModelService:
             return model
         except Exception as e:
             logger.error(f"加载模型 {model_id} 错误: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             raise
     
     def predict(self, model_id: str, input_data: np.ndarray) -> Dict[str, Any]:

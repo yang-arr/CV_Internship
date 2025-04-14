@@ -39,7 +39,7 @@ class ModelInfo(BaseModel):
         extra = "allow"
 
 @router.get("/", response_model=List[ModelInfo])
-async def list_models(current_user: User = Depends(get_current_user)):
+async def list_models():
     """
     获取所有可用的模型列表
     

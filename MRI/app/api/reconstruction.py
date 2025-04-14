@@ -34,26 +34,19 @@ router = APIRouter()
 
 # 获取可用模型列表
 @router.get("/models")
-async def get_available_models(current_user: User = Depends(get_current_user)):
+async def get_available_models():
     """获取可用的重建模型列表"""
     try:
         logger.info("获取可用模型列表")
         models = model_service.get_models_list()
         
-        # 转换为API响应格式
-        models_list = []
-        for model in models:
-            models_list.append({
-                "id": model.get("id", ""),
-                "name": model.get("name", ""),
-                "description": model.get("description", ""),
-                "created_at": model.get("created_at", datetime.now().isoformat())
-            })
-        
-        logger.info(f"找到 {len(models_list)} 个可用模型")
-        return {"models": models_list}
+        # 直接返回模型列表，无需额外处理
+        logger.info(f"找到 {len(models)} 个可用模型")
+        return {"models": models}
     except Exception as e:
         logger.error(f"获取模型列表时出错: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"获取模型列表失败: {str(e)}")
 
 # 提交重建任务

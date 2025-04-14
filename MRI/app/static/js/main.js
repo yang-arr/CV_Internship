@@ -168,22 +168,16 @@ function sendPing() {
  */
 async function loadModels() {
     try {
-        // 添加认证头
-        const headers = {
-            'Authorization': getAuthHeader()
-        };
+        console.log('开始加载模型列表...');
         
-        const response = await fetch(`${API_URL}/api/reconstruction/models`, { headers });
+        const response = await fetch(`${API_URL}/api/reconstruction/models`);
         if (!response.ok) {
-            if (response.status === 401) {
-                // 认证失败，重定向到登录页面
-                window.location.href = '/login';
-                return;
-            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('获取到的模型数据:', data);
+        
         const models = data.models || [];
         
         // 清空现有选项
@@ -195,19 +189,18 @@ async function loadModels() {
             option.value = model.id;
             option.textContent = model.name || model.id;
             modelSelect.appendChild(option);
+            console.log(`添加模型选项: ${model.id} - ${model.name}`);
         });
         
         if (models.length === 0) {
             showMessage('没有可用的模型', 'warning');
+            console.log('未找到任何模型');
+        } else {
+            console.log(`成功加载了 ${models.length} 个模型`);
         }
     } catch (error) {
         console.error('加载模型时出错:', error);
         showMessage('加载模型失败: ' + error.message, 'danger');
-        
-        // 如果是认证错误，重定向到登录页面
-        if (error.message.includes('401')) {
-            window.location.href = '/login';
-        }
     }
 }
 
