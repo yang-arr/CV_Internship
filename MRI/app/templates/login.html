@@ -563,8 +563,12 @@
                         window.location.href = '/dashboard';
                     }, 1000);
                 } else {
-                    const data = await response.json();
-                    showMessage(data.detail || '登录失败，请检查用户名和密码', 'error');
+                    try {
+                        const data = await response.json();
+                        showMessage(data.detail || '登录失败，请检查用户名和密码', 'error');
+                    } catch (e) {
+                        showMessage(`登录失败: ${response.status} ${response.statusText}`, 'error');
+                    }
                     hideLoading();
                 }
             } catch (error) {

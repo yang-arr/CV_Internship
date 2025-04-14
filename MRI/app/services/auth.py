@@ -120,10 +120,11 @@ async def get_current_user(
     if not token:
         logger.warning("未找到认证令牌")
         raise credentials_exception
-    
-    # 输出令牌信息便于调试
-    logger.info(f"处理令牌: {type(token).__name__}")
-    
+        # 确保token是字符串类型
+    if not isinstance(token, str):
+        logger.warning(f"令牌类型错误: {type(token).__name__}")
+        raise credentials_exception
+
     try:
         # 解码令牌
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
