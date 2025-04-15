@@ -50,6 +50,10 @@ router = APIRouter()
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "training_results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
+# 定义模型保存的根目录
+MODELS_DIR = Path(__file__).resolve().parent.parent.parent / "models"
+MODELS_DIR.mkdir(exist_ok=True)
+
 # 存储正在进行的训练任务
 active_tasks = {}
 
@@ -115,7 +119,10 @@ def train_model_background(task_id: str, image_path: str, config: Dict[str, Any]
             "status": "running",
             "progress": 0,
             "user_id": user_id,
-            "start_time": datetime.datetime.now().isoformat()
+            "start_time": datetime.datetime.now().isoformat(),
+            "current_epoch": 0,
+            "current_loss": None,
+            "log_message": "开始训练..."
         }
         
         # 创建结果目录
@@ -139,7 +146,7 @@ def train_model_background(task_id: str, image_path: str, config: Dict[str, Any]
         
         # 转换为张量
         image_np = np.array(image) / 255.0  # 归一化到0-1
-        image_tensor = torch.tensor(image_np, dtype=torch.complex64)
+        image_tensor = torch.tensor(image_np, dtype=torch.float32)
         
         # 创建简单数据集
         dataset = SimpleImageDataset(image_tensor, 256, 256)
@@ -175,7 +182,7 @@ def train_model_background(task_id: str, image_path: str, config: Dict[str, Any]
         for epoch in range(epochs):
             # 更新进度
             progress = (epoch + 1) / epochs * 100
-            active_tasks[task_id]["progress"] = progress
+            current_loss = None
             
             # 训练一个epoch
             loss, psnr, ssim, nse = train_epoch_image(
@@ -186,6 +193,14 @@ def train_model_background(task_id: str, image_path: str, config: Dict[str, Any]
             
             train_loss_history.append(loss)
             train_psnr_history.append(psnr)
+            
+            # 更新任务状态
+            active_tasks[task_id].update({
+                "progress": progress,
+                "current_epoch": epoch + 1,
+                "current_loss": float(loss),
+                "log_message": f"轮次 {epoch+1}/{epochs}: Loss={loss:.4e}, PSNR={psnr:.2f}, SSIM={ssim:.4f}"
+            })
             
             # 每隔一定间隔保存结果
             if (epoch + 1) % config.get("save_interval", 1000) == 0:
@@ -215,44 +230,37 @@ def train_model_background(task_id: str, image_path: str, config: Dict[str, Any]
         with open(result_dir / "best_metrics.txt", "w") as f:
             f.write(f"Best PSNR: {best_psnr:.2f}\nBest SSIM: {best_ssim:.4f}\n")
         
-        # 保存训练好的模型
-        model_save_path = result_dir / "best_model.pt"
-        torch.save(model.state_dict(), str(model_save_path))
+        # 保存训练好的模型到models目录
+        model_filename = f"online_model_{task_id}.pt"
+        model_path = MODELS_DIR / model_filename
         
-        # 创建模型信息文件
-        model_info = {
-            "name": f"在线训练模型_{task_id}",
-            "description": f"通过在线上传图像训练的MRI重建模型",
-            "model_filename": "best_model.pt",
-            "created_at": datetime.datetime.now().isoformat(),
-            "parameters": {
-                "input_size": 256,
-                "output_size": 256,
-                "model_type": "SIREN"
-            },
-            "metrics": {
-                "psnr": float(best_psnr),
-                "ssim": float(best_ssim),
-                "nse": 0.98  # 这里可以使用实际计算的值
-            },
-            "config": config
-        }
-        
-        with open(result_dir / "info.json", "w", encoding="utf-8") as f:
-            json.dump(model_info, f, ensure_ascii=False, indent=2)
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            'task_id': task_id,
+            'training_info': {
+                'epochs': config["epochs"],
+                'encoder_config': config["encoder"],
+                'mlp_config': config["mlp"],
+                'final_metrics': {
+                    'psnr': float(best_psnr),
+                    'ssim': float(best_ssim)
+                },
+                'training_date': datetime.datetime.now().isoformat()
+            }
+        }, str(model_path))
         
         # 更新任务状态
-        active_tasks[task_id] = {
+        active_tasks[task_id].update({
             "status": "completed",
             "progress": 100,
-            "user_id": user_id,
-            "start_time": active_tasks[task_id]["start_time"],
             "end_time": datetime.datetime.now().isoformat(),
             "metrics": {
                 "psnr": float(best_psnr),
                 "ssim": float(best_ssim)
-            }
-        }
+            },
+            "model_path": str(model_path),
+            "log_message": f"训练完成！模型已保存至: {model_path}"
+        })
         
         logger.info(f"训练任务 {task_id} 完成")
         
@@ -262,14 +270,13 @@ def train_model_background(task_id: str, image_path: str, config: Dict[str, Any]
         logger.error(traceback.format_exc())
         
         # 更新任务状态为失败
-        active_tasks[task_id] = {
+        active_tasks[task_id].update({
             "status": "failed",
             "progress": 0,
-            "user_id": user_id,
-            "start_time": active_tasks[task_id]["start_time"] if task_id in active_tasks else datetime.datetime.now().isoformat(),
             "end_time": datetime.datetime.now().isoformat(),
-            "error": str(e)
-        }
+            "error": str(e),
+            "log_message": f"训练失败：{str(e)}"
+        })
 
 @router.post("/")
 async def start_training(
@@ -403,49 +410,65 @@ async def get_training_status(
     Returns:
         任务状态信息
     """
-    # 检查任务是否存在
-    if task_id not in active_tasks:
-        # 查看任务目录是否存在
-        task_dir = RESULTS_DIR / task_id
-        if task_dir.exists():
-            # 读取best_metrics.txt判断任务是否完成
-            metrics_file = task_dir / "best_metrics.txt"
-            if metrics_file.exists():
-                with open(metrics_file, "r") as f:
-                    metrics_text = f.read()
+    try:
+        # 检查任务是否存在
+        if task_id not in active_tasks:
+            # 查看任务目录是否存在
+            task_dir = RESULTS_DIR / task_id
+            if task_dir.exists():
+                # 读取best_metrics.txt判断任务是否完成
+                metrics_file = task_dir / "best_metrics.txt"
+                if metrics_file.exists():
+                    with open(metrics_file, "r") as f:
+                        metrics_text = f.read()
                     
-                return {
-                    "task_id": task_id,
-                    "status": "completed",
-                    "progress": 100,
-                    "message": "训练已完成",
-                    "metrics": metrics_text
-                }
+                    # 检查模型文件
+                    model_path = MODELS_DIR / f"online_model_{task_id}.pt"
+                    
+                    return {
+                        "task_id": task_id,
+                        "status": "completed",
+                        "progress": 100,
+                        "message": "训练已完成",
+                        "metrics": metrics_text,
+                        "model_path": str(model_path) if model_path.exists() else None
+                    }
+                else:
+                    return {
+                        "task_id": task_id,
+                        "status": "unknown",
+                        "message": "找到任务目录但任务状态未知"
+                    }
             else:
-                return {
-                    "task_id": task_id,
-                    "status": "unknown",
-                    "message": "找到任务目录但任务状态未知"
-                }
-        else:
-            raise HTTPException(status_code=404, detail=f"任务 {task_id} 不存在")
+                raise HTTPException(status_code=404, detail=f"任务 {task_id} 不存在")
+        
+        # 获取任务状态
+        task_info = active_tasks[task_id]
+        
+        # 检查权限（只有创建者或管理员可以查看）
+        if task_info["user_id"] != current_user.id and not current_user.is_admin:
+            raise HTTPException(status_code=403, detail="没有权限查看此任务")
+        
+        # 返回任务状态
+        return {
+            "task_id": task_id,
+            "status": task_info["status"],
+            "progress": task_info["progress"],
+            "current_epoch": task_info.get("current_epoch", 0),
+            "current_loss": task_info.get("current_loss"),
+            "start_time": task_info["start_time"],
+            "end_time": task_info.get("end_time"),
+            "metrics": task_info.get("metrics"),
+            "error": task_info.get("error"),
+            "log_message": task_info.get("log_message"),
+            "model_path": task_info.get("model_path")
+        }
     
-    # 获取任务状态
-    task_info = active_tasks[task_id]
-    
-    # 检查权限（只有创建者或管理员可以查看）
-    if task_info["user_id"] != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="没有权限查看此任务")
-    
-    return {
-        "task_id": task_id,
-        "status": task_info["status"],
-        "progress": task_info["progress"],
-        "start_time": task_info["start_time"],
-        "end_time": task_info.get("end_time"),
-        "metrics": task_info.get("metrics"),
-        "error": task_info.get("error")
-    }
+    except Exception as e:
+        logger.error(f"获取训练状态出错: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/result/{task_id}")
 async def get_training_result(

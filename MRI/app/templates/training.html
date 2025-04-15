@@ -2,59 +2,207 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>模型训练</title>
+    <title>在线模型训练</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .progress {
             margin: 20px 0;
+            height: 25px;
         }
-        #logArea {
+        .progress-bar {
+            line-height: 25px;
+            font-size: 14px;
+        }
+        #trainingLog {
             height: 300px;
             overflow-y: auto;
             background-color: #f8f9fa;
             padding: 10px;
             border-radius: 5px;
+            font-family: monospace;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .metrics-container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .advanced-options {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h2>模型训练</h2>
+        <h2>在线模型训练</h2>
         
         <form id="trainingForm" class="mb-4">
             <div class="form-group">
-                <label for="trainingData">训练数据</label>
-                <input type="file" class="form-control-file" id="trainingData" required multiple>
+                <label for="trainingData">训练图像</label>
+                <input type="file" class="form-control-file" id="trainingData" name="file" accept="image/*" required>
+                <small class="form-text text-muted">请选择要训练的图像文件（支持常见图像格式）</small>
             </div>
             
-            <div class="form-group">
-                <label for="epochs">训练轮次</label>
-                <input type="number" class="form-control" id="epochs" value="10" min="1">
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="epochs">训练轮次</label>
+                    <input type="number" class="form-control" id="epochs" name="epochs" value="5000" min="1">
+                </div>
+                
+                <div class="form-group col-md-4">
+                    <label for="learningRate">学习率</label>
+                    <input type="number" class="form-control" id="learningRate" name="learning_rate" value="0.0001" step="0.0001">
+                </div>
+                
+                <div class="form-group col-md-4">
+                    <label for="saveInterval">保存间隔</label>
+                    <input type="number" class="form-control" id="saveInterval" name="save_interval" value="500" min="1">
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="batchSize">批次大小</label>
-                <input type="number" class="form-control" id="batchSize" value="32" min="1">
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="showAdvanced">
+                <label class="form-check-label" for="showAdvanced">显示高级选项</label>
+            </div>
+            
+            <div id="advancedOptions" class="advanced-options">
+                <h5>编码器配置</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="encoderMode">编码模式</label>
+                        <select class="form-control" id="encoderMode" name="encoder_mode">
+                            <option value="fourier">Fourier</option>
+                            <option value="gaussian">Gaussian</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group col-md-3">
+                        <label for="inFeatures">输入特征数</label>
+                        <input type="number" class="form-control" id="inFeatures" name="in_features" value="2" min="1">
+                    </div>
+                    
+                    <div class="form-group col-md-3">
+                        <label for="outFeatures">输出特征数</label>
+                        <input type="number" class="form-control" id="outFeatures" name="out_features" value="20" min="1">
+                    </div>
+                    
+                    <div class="form-group col-md-3">
+                        <label for="coordinateScales">坐标尺度</label>
+                        <input type="text" class="form-control" id="coordinateScales" name="coordinate_scales" value="[1.0, 1.0]">
+                    </div>
+                </div>
+                
+                <h5>MLP配置</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="mlpHiddenFeatures">隐藏层特征数</label>
+                        <input type="number" class="form-control" id="mlpHiddenFeatures" name="mlp_hidden_features" value="256" min="1">
+                    </div>
+                    
+                    <div class="form-group col-md-3">
+                        <label for="mlpHiddenLayers">隐藏层数量</label>
+                        <input type="number" class="form-control" id="mlpHiddenLayers" name="mlp_hidden_layers" value="4" min="1">
+                    </div>
+                    
+                    <div class="form-group col-md-3">
+                        <label for="omega0">Omega_0</label>
+                        <input type="number" class="form-control" id="omega0" name="omega_0" value="30.0" step="0.1">
+                    </div>
+                    
+                    <div class="form-group col-md-3">
+                        <label for="activation">激活函数</label>
+                        <select class="form-control" id="activation" name="activation">
+                            <option value="sine">Sine</option>
+                            <option value="relu">ReLU</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <h5>其他配置</h5>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="supervisionMode">监督模式</label>
+                        <select class="form-control" id="supervisionMode" name="supervision_mode">
+                            <option value="image">Image</option>
+                            <option value="kspace">K-space</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group col-md-4">
+                        <label for="lambdaTv">TV正则化系数</label>
+                        <input type="number" class="form-control" id="lambdaTv" name="lambda_tv" value="0.00001" step="0.00001">
+                    </div>
+                    
+                    <div class="form-group col-md-4">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" id="useGpu" name="use_gpu" checked>
+                            <label class="form-check-label" for="useGpu">使用GPU（如果可用）</label>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary" id="startTraining">开始训练</button>
         </form>
 
-        <div id="trainingStatus" style="display: none;">
+        <div id="trainingProgressContainer" style="display: none;">
             <h4>训练进度</h4>
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            
+            <div class="metrics-container">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div id="trainingStatus">状态: 等待开始</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="trainingLoss">损失值: -</div>
+                    </div>
+                </div>
             </div>
-            <div id="statusText" class="mb-3"></div>
+            
+            <div class="progress">
+                <div id="trainingProgress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="chart-container">
+                        <canvas id="trainingChart"></canvas>
+                    </div>
+                </div>
+            </div>
             
             <h4>训练日志</h4>
-            <div id="logArea" class="mb-3"></div>
+            <div id="trainingLog" class="mb-3"></div>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/js/training.js"></script>
+    <script>
+        // 高级选项的显示/隐藏
+        document.getElementById('showAdvanced').addEventListener('change', function() {
+            const advancedOptions = document.getElementById('advancedOptions');
+            advancedOptions.style.display = this.checked ? 'block' : 'none';
+        });
+    </script>
 </body>
 </html> 

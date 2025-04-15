@@ -109,7 +109,7 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ):
     """获取当前用户"""
-    logger.info("验证当前用户令牌")
+    logger.info("开始验证当前用户令牌")
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="无效的身份认证凭据",
@@ -121,6 +121,8 @@ async def get_current_user(
     
     # 尝试从认证头获取
     auth_header = request.headers.get("Authorization")
+    logger.info(f"Authorization头: {auth_header}")
+    
     if auth_header and isinstance(auth_header, str):
         if auth_header.startswith("Bearer "):
             token = auth_header.replace("Bearer ", "")
@@ -129,19 +131,22 @@ async def get_current_user(
     # 如果认证头中没有，尝试从cookie获取
     if not token:
         token_cookie = request.cookies.get("access_token")
+        logger.info(f"Cookie中的令牌: {token_cookie}")
+        
         if token_cookie and isinstance(token_cookie, str):
             if token_cookie.startswith("Bearer "):
                 token = token_cookie.replace("Bearer ", "")
-                logger.info("从Cookie获取到令牌")
+                logger.info("从Cookie获取到Bearer令牌")
             else:
                 token = token_cookie
                 logger.info("从Cookie获取到原始令牌")
     
     if not token:
-        logger.warning("未找到认证令牌")
+        logger.warning("未找到任何有效的认证令牌")
         raise credentials_exception
 
     try:
+        logger.info("开始解码令牌...")
         # 解码令牌
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -149,7 +154,7 @@ async def get_current_user(
             logger.warning("令牌中未找到用户名")
             raise credentials_exception
         token_data = TokenData(username=username)
-        logger.info(f"令牌有效，用户名: {username}")
+        logger.info(f"令牌解码成功，用户名: {username}")
     except JWTError as e:
         logger.error(f"解码令牌失败: {str(e)}")
         raise credentials_exception

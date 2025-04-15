@@ -3,6 +3,7 @@ let lossChart = null;
 let metricsChart = null;
 let currentTaskId = null;
 let progressInterval = null;
+let trainingChart = null;
 
 // DOM元素
 const trainingForm = document.getElementById('training-form');
@@ -12,6 +13,54 @@ const trainingStatus = document.getElementById('training-status');
 const trainingLoss = document.getElementById('training-loss');
 const trainingLog = document.getElementById('training-log');
 const loadingOverlay = document.getElementById('loadingOverlay');
+
+// UI状态管理
+let isTraining = false;
+
+// 显示加载状态
+function showLoading() {
+    isTraining = true;
+    if (trainingForm) {
+        const submitButton = trainingForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 训练中...';
+        }
+    }
+    if (trainingProgressContainer) {
+        trainingProgressContainer.style.display = 'block';
+    }
+}
+
+// 隐藏加载状态
+function hideLoading() {
+    isTraining = false;
+    if (trainingForm) {
+        const submitButton = trainingForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '开始训练';
+        }
+    }
+}
+
+// 重置UI状态
+function resetUI() {
+    hideLoading();
+    if (trainingProgress) {
+        trainingProgress.style.width = '0%';
+        trainingProgress.textContent = '0%';
+    }
+    if (trainingStatus) {
+        trainingStatus.textContent = '';
+    }
+    if (trainingLoss) {
+        trainingLoss.textContent = '-';
+    }
+    if (trainingForm) {
+        trainingForm.reset();
+    }
+}
 
 // 初始化图表
 function initCharts() {
@@ -73,6 +122,29 @@ function initCharts() {
             }
         }
     });
+
+    const ctx = document.getElementById('trainingChart').getContext('2d');
+    trainingChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: '训练损失',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
 // 更新训练进度
@@ -85,12 +157,16 @@ function updateProgress(progress, status, loss) {
 
 // 添加日志
 function addLog(message) {
+    if (!message) return;
     const timestamp = new Date().toLocaleTimeString();
-    const logEntry = document.createElement('p');
-    logEntry.className = 'mb-1';
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
     logEntry.innerHTML = `<small class="text-muted">[${timestamp}]</small> ${message}`;
-    trainingLog.appendChild(logEntry);
-    trainingLog.scrollTop = trainingLog.scrollHeight;
+    if (trainingLog) {
+        trainingLog.appendChild(logEntry);
+        trainingLog.scrollTop = trainingLog.scrollHeight;
+    }
+    console.log(`[${timestamp}] ${message}`); // 同时在控制台显示日志
 }
 
 // 更新图表
@@ -118,29 +194,16 @@ async function pollTrainingProgress(taskId) {
         }
         
         const data = await response.json();
+        console.log('Training progress data:', data); // 添加调试日志
         
         // 更新进度
-        updateProgress(data.progress, data.status, data.loss);
-        
-        // 添加日志
-        if (data.log_message) {
-            addLog(data.log_message);
-        }
-        
-        // 更新图表
-        if (data.current_epoch > 0) {
-            updateCharts(data.current_epoch, data.current_loss, data.metrics);
-        }
+        updateTrainingProgress(data);
         
         // 如果训练未完成，继续轮询
         if (data.status !== 'completed' && data.status !== 'failed') {
             setTimeout(() => pollTrainingProgress(taskId), 1000);
         } else {
-            if (data.status === 'completed') {
-                addLog('训练完成！');
-            } else {
-                addLog(`训练失败: ${data.error || '未知错误'}`);
-            }
+            handleTrainingCompletion(data);
         }
     } catch (error) {
         console.error('轮询训练进度时出错:', error);
@@ -148,17 +211,110 @@ async function pollTrainingProgress(taskId) {
     }
 }
 
+// 更新训练进度UI
+function updateTrainingProgress(data) {
+    console.log('Updating training progress:', data); // 添加调试日志
+    
+    // 更新进度条
+    const progressBar = document.getElementById('trainingProgress');
+    if (progressBar) {
+        const progress = data.progress || 0;
+        progressBar.style.width = `${progress}%`;
+        progressBar.textContent = `${Math.round(progress)}%`;
+        progressBar.setAttribute('aria-valuenow', progress);
+    }
+
+    // 更新状态和损失值
+    const statusElement = document.getElementById('trainingStatus');
+    if (statusElement) {
+        statusElement.textContent = `状态: ${data.status || '未知'}`;
+    }
+
+    const lossElement = document.getElementById('trainingLoss');
+    if (lossElement && data.current_loss !== undefined) {
+        lossElement.textContent = `损失值: ${Number(data.current_loss).toFixed(4)}`;
+    }
+
+    // 更新图表
+    if (trainingChart && data.current_epoch && data.current_loss !== undefined) {
+        const dataset = trainingChart.data.datasets[0];
+        dataset.data.push(data.current_loss);
+        trainingChart.data.labels.push(data.current_epoch);
+        trainingChart.update();
+    }
+
+    // 添加日志
+    if (data.log_message) {
+        addLog(data.log_message);
+    }
+}
+
+// 处理训练完成
+function handleTrainingCompletion(data) {
+    hideLoading();
+    
+    if (data.status === 'completed') {
+        addLog('训练完成！');
+        if (data.model_path) {
+            addLog(`模型已保存至: ${data.model_path}`);
+        }
+        alert('训练完成！模型已保存。');
+    } else {
+        addLog(`训练失败: ${data.error || '未知错误'}`);
+        alert('训练失败: ' + (data.error || '未知错误'));
+    }
+
+    resetUI();
+}
+
 // 提交训练表单
 trainingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // 显示加载遮罩
-    loadingOverlay.classList.remove('d-none');
+    showLoading();
     
     try {
         const formData = new FormData(trainingForm);
         
-        // 发送训练请求
+        // 添加默认的训练配置
+        if (!formData.has('encoder_mode')) {
+            formData.append('encoder_mode', 'fourier');
+        }
+        if (!formData.has('in_features')) {
+            formData.append('in_features', '2');
+        }
+        if (!formData.has('out_features')) {
+            formData.append('out_features', '20');
+        }
+        if (!formData.has('coordinate_scales')) {
+            formData.append('coordinate_scales', '[1.0, 1.0]');
+        }
+        if (!formData.has('mlp_hidden_features')) {
+            formData.append('mlp_hidden_features', '256');
+        }
+        if (!formData.has('mlp_hidden_layers')) {
+            formData.append('mlp_hidden_layers', '4');
+        }
+        if (!formData.has('omega_0')) {
+            formData.append('omega_0', '30.0');
+        }
+        if (!formData.has('activation')) {
+            formData.append('activation', 'sine');
+        }
+        if (!formData.has('supervision_mode')) {
+            formData.append('supervision_mode', 'image');
+        }
+        if (!formData.has('lambda_tv')) {
+            formData.append('lambda_tv', '1e-5');
+        }
+        if (!formData.has('use_gpu')) {
+            formData.append('use_gpu', 'true');
+        }
+        if (!formData.has('save_interval')) {
+            formData.append('save_interval', '500');
+        }
+        
+        // 发送训练请求到训练API
         const response = await fetch('/api/training/start', {
             method: 'POST',
             body: formData
@@ -169,90 +325,35 @@ trainingForm.addEventListener('submit', async (e) => {
         }
         
         const data = await response.json();
-        currentTaskId = data.task_id;
+        console.log('Training started:', data); // 调试日志
+        
+        if (!data.task_id) {
+            throw new Error('服务器未返回任务ID');
+        }
         
         // 显示进度容器
-        trainingProgressContainer.style.display = 'block';
+        if (trainingProgressContainer) {
+            trainingProgressContainer.style.display = 'block';
+        }
         
         // 清空日志
-        trainingLog.innerHTML = '';
+        if (trainingLog) {
+            trainingLog.innerHTML = '';
+        }
         addLog('训练任务已启动');
         
-        // 重置图表
-        initCharts();
-        
         // 开始轮询进度
-        pollTrainingProgress(currentTaskId);
+        pollTrainingProgress(data.task_id);
         
     } catch (error) {
         console.error('提交训练请求时出错:', error);
         addLog(`提交失败: ${error.message}`);
-    } finally {
-        // 隐藏加载遮罩
-        loadingOverlay.classList.add('d-none');
+        hideLoading();
     }
 });
 
 // 页面加载完成后初始化图表
 document.addEventListener('DOMContentLoaded', initCharts);
-
-// 更新训练状态的函数
-function updateTrainingProgress() {
-    if (!currentTaskId) return;
-    
-    fetch(`/api/training/progress/${currentTaskId}`)
-        .then(response => response.json())
-        .then(data => {
-            // 更新进度条
-            const progress = data.progress || 0;
-            $('.progress-bar').css('width', `${progress}%`);
-            $('.progress-bar').attr('aria-valuenow', progress);
-            
-            // 更新状态文本
-            let statusText = `状态: ${data.status}<br>`;
-            if (data.current_epoch) {
-                statusText += `当前轮次: ${data.current_epoch}<br>`;
-            }
-            if (data.loss) {
-                statusText += `损失值: ${data.loss}<br>`;
-            }
-            $('#statusText').html(statusText);
-            
-            // 添加日志
-            if (data.logs && data.logs.length > 0) {
-                const logArea = $('#logArea');
-                data.logs.forEach(log => {
-                    logArea.append(`<div>${log}</div>`);
-                });
-                // 滚动到底部
-                logArea.scrollTop(logArea[0].scrollHeight);
-            }
-            
-            // 如果训练完成或失败，停止轮询
-            if (data.status === 'completed' || data.status === 'failed') {
-                clearInterval(progressInterval);
-                progressInterval = null;
-                currentTaskId = null;
-                
-                if (data.status === 'completed') {
-                    alert('训练完成！');
-                } else {
-                    alert('训练失败：' + (data.error || '未知错误'));
-                }
-                
-                // 重置表单
-                $('#trainingForm button').prop('disabled', false);
-            }
-        })
-        .catch(error => {
-            console.error('获取训练进度时出错:', error);
-            clearInterval(progressInterval);
-            progressInterval = null;
-            currentTaskId = null;
-            alert('获取训练进度时出错');
-            $('#trainingForm button').prop('disabled', false);
-        });
-}
 
 // 处理表单提交
 $('#trainingForm').on('submit', function(e) {

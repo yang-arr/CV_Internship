@@ -448,7 +448,7 @@
         </div>
         <h1>"智绘影"MRI重建系统</h1>
         <h2 style="text-align: center; margin-bottom: 20px; color: #555;">用户登录</h2>
-        <form id="loginForm" onsubmit="return handleLogin(event)">
+        <form id="loginForm">
             <div class="form-group">
                 <label for="username">用户名</label>
                 <input type="text" id="username" name="username" required>
@@ -460,7 +460,8 @@
                 <i class="bi bi-lock input-icon"></i>
             </div>
             <button type="submit" id="loginButton">
-                <i class="bi bi-box-arrow-in-right me-2"></i>登录
+                <span id="loadingIndicator" class="loading" style="display: none;"></span>
+                <span id="buttonText">登录</span>
             </button>
         </form>
         <div id="message" class="message" style="display: none;"></div>
@@ -524,7 +525,8 @@
             });
         }
 
-        async function handleLogin(event) {
+        // 处理登录表单提交
+        loginForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             
             const username = document.getElementById('username').value;
@@ -554,8 +556,6 @@
                 
                 // 保存令牌到localStorage
                 localStorage.setItem('access_token', data.access_token);
-                
-                // 简化令牌类型存储
                 localStorage.setItem('token_type', 'Bearer');
                 localStorage.setItem('username', data.username);
                 
@@ -574,9 +574,7 @@
                 // 重置登录按钮
                 hideLoading();
             }
-            
-            return false;
-        }
+        });
 
         // 添加全局请求拦截器，为所有请求添加Authorization头
         document.addEventListener('DOMContentLoaded', () => {

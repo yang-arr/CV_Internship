@@ -71,7 +71,7 @@ class AuthManager {
         
         window.fetch = function(url, options = {}) {
             // 只拦截对API的请求
-            if (url.toString().includes('/api/')) {
+            if (url.toString().includes('/api/') || url.toString().includes('/dashboard')) {
                 // 获取授权头
                 const token = localStorage.getItem(self.tokenKey);
                 const tokenType = localStorage.getItem(self.tokenTypeKey) || 'Bearer';
@@ -82,9 +82,9 @@ class AuthManager {
                     options.headers = options.headers || {};
                     
                     // 添加Authorization头 (确保首字母大写)
-                    const headerValue = `${tokenType.charAt(0).toUpperCase() + tokenType.slice(1)} ${token}`;
+                    const headerValue = `${tokenType} ${token}`;
                     options.headers['Authorization'] = headerValue;
-                    console.log(`添加认证头: ${headerValue.substring(0, 15)}...`);
+                    console.log(`添加认证头: ${headerValue}`);
                     
                     // 确保包含凭据（cookies）
                     options.credentials = 'include';
