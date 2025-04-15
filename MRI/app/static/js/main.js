@@ -585,11 +585,14 @@ function formatDate(dateString) {
  */
 function getAuthHeader() {
     const token = localStorage.getItem('access_token');
-    const tokenType = localStorage.getItem('token_type');
     if (!token) {
         console.error('未找到认证令牌');
         return '';
     }
+    
+    // 使用Bearer认证方式
+    const tokenType = 'Bearer';
+    console.log('生成认证头: Bearer + token');
     return `${tokenType} ${token}`;
 }
 
@@ -603,4 +606,80 @@ function checkAuth() {
         return false;
     }
     return true;
-} 
+}
+
+// 开始训练模型
+async function startTraining(formData) {
+    try {
+        const response = await fetch('/api/training/start', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            console.log('训练任务已启动，任务ID:', data.task_id);
+            // 开始轮询训练进度
+            pollTrainingProgress(data.task_id);
+            return data.task_id;
+        } else {
+            console.error('启动训练失败:', data.error);
+            alert('启动训练失败: ' + data.error);
+        }
+    } catch (error) {
+        console.error('请求错误:', error);
+        alert('请求错误: ' + error.message);
+    }
+}
+
+// 轮询训练进度
+function pollTrainingProgress(taskId) {
+    const progressInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/training/progress/${taskId}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                // 更新进度显示
+                updateTrainingProgress(data);
+                
+                // 如果训练完成或失败，停止轮询
+                if (data.status === 'completed' || data.status === 'failed') {
+                    clearInterval(progressInterval);
+                }
+            } else {
+                console.error('获取进度失败:', data.error);
+                clearInterval(progressInterval);
+            }
+        } catch (error) {
+            console.error('轮询错误:', error);
+            clearInterval(progressInterval);
+        }
+    }, 1000); // 每秒轮询一次
+}
+
+// 更新训练进度显示
+function updateTrainingProgress(data) {
+    const progressBar = document.getElementById('training-progress');
+    const statusText = document.getElementById('training-status');
+    const lossText = document.getElementById('training-loss');
+    
+    if (progressBar && statusText && lossText) {
+        progressBar.value = data.progress;
+        statusText.textContent = `状态: ${data.status}`;
+        lossText.textContent = `损失值: ${data.loss.toFixed(4)}`;
+    }
+}
+
+// 处理训练表单提交
+document.getElementById('training-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const taskId = await startTraining(formData);
+    
+    if (taskId) {
+        // 显示进度区域
+        document.getElementById('training-progress-container').style.display = 'block';
+    }
+}); 

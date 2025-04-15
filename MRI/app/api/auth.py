@@ -56,8 +56,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/token")
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), 
-    db: Session = Depends(get_db),
-    response: Response = None
+    db: Session = Depends(get_db)
 ):
     """用户登录并获取访问令牌"""
     logger.info(f"尝试用户登录: {form_data.username}")
@@ -91,7 +90,7 @@ async def login_for_access_token(
     # 设置cookie
     response.set_cookie(
         key="access_token",
-        value=f"Bearer {access_token}",
+        value=access_token,  # 直接存储不带前缀的token
         httponly=True,
         max_age=1800,  # 30分钟
         expires=1800,

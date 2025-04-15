@@ -106,8 +106,7 @@ async def get_token_from_cookie_or_header(
 
 async def get_current_user(
     request: Request,
-    db: Session = Depends(get_db),
-    token: Optional[str] = Depends(get_token_from_cookie_or_header)
+    db: Session = Depends(get_db)
 ):
     """获取当前用户"""
     logger.info("验证当前用户令牌")
@@ -117,12 +116,29 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
+    # 直接从请求中获取令牌
+    token = None
+    
+    # 尝试从认证头获取
+    auth_header = request.headers.get("Authorization")
+    if auth_header and isinstance(auth_header, str):
+        if auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "")
+            logger.info("从Authorization头获取到令牌")
+    
+    # 如果认证头中没有，尝试从cookie获取
+    if not token:
+        token_cookie = request.cookies.get("access_token")
+        if token_cookie and isinstance(token_cookie, str):
+            if token_cookie.startswith("Bearer "):
+                token = token_cookie.replace("Bearer ", "")
+                logger.info("从Cookie获取到令牌")
+            else:
+                token = token_cookie
+                logger.info("从Cookie获取到原始令牌")
+    
     if not token:
         logger.warning("未找到认证令牌")
-        raise credentials_exception
-        # 确保token是字符串类型
-    if not isinstance(token, str):
-        logger.warning(f"令牌类型错误: {type(token).__name__}")
         raise credentials_exception
 
     try:

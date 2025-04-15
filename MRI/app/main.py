@@ -43,20 +43,13 @@ app.add_middleware(
 )
 
 # 导入路由和服务
-from MRI.app.api import reconstruction, model_management, upload, websocket, auth, medical_qa, online_training
 from MRI.app.services.db import create_tables, get_db
 from MRI.app.services.auth import get_current_user, SECRET_KEY, ALGORITHM
 from MRI.app.models.user import User
+from MRI.app import create_app
 
-# 注册路由
-app.include_router(reconstruction.router, prefix="/api/reconstruction", tags=["重建"])
-app.include_router(model_management.router, prefix="/api/models", tags=["模型管理"])
-app.include_router(upload.router, prefix="/api/upload", tags=["文件上传"])
-app.include_router(websocket.router, prefix="/api", tags=["WebSocket"])
-#app.include_router(auth.router, tags=["认证"])
-app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
-app.include_router(medical_qa.router, prefix="/api/medical", tags=["医疗问答"])
-app.include_router(online_training.router, prefix="/api/online-training", tags=["在线训练"])
+# 创建应用实例
+app = create_app()
 
 # 启动事件
 @app.on_event("startup")
@@ -86,13 +79,13 @@ async def root(request: Request):
 @app.get("/login")
 async def login_page(request: Request):
     """渲染登录页面"""
-    try:
-        # 如果用户已登录，直接重定向到仪表盘
-        await get_current_user(request)
+    # 检查是否有token cookie，如果有说明用户可能已登录
+    access_token = request.cookies.get("access_token")
+    if access_token:
+        # 如果有cookie但可能已过期，重定向到仪表盘，让仪表盘页面再进行权限检查
         return RedirectResponse(url="/dashboard")
-    except HTTPException:
-        # 如果用户未登录，显示登录页面
-        return templates.TemplateResponse("login.html", {"request": request})
+    # 否则显示登录页面
+    return templates.TemplateResponse("login.html", {"request": request})
 
 # 仪表盘页面路由
 @app.get("/dashboard")

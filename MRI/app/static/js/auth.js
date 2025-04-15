@@ -81,8 +81,10 @@ class AuthManager {
                     options = options || {};
                     options.headers = options.headers || {};
                     
-                    // 添加Authorization头
-                    options.headers['Authorization'] = `${tokenType} ${token}`;
+                    // 添加Authorization头 (确保首字母大写)
+                    const headerValue = `${tokenType.charAt(0).toUpperCase() + tokenType.slice(1)} ${token}`;
+                    options.headers['Authorization'] = headerValue;
+                    console.log(`添加认证头: ${headerValue.substring(0, 15)}...`);
                     
                     // 确保包含凭据（cookies）
                     options.credentials = 'include';

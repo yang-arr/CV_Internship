@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>模型训练</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .progress {
+            margin: 20px 0;
+        }
+        #logArea {
+            height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>模型训练</h2>
+        
+        <form id="trainingForm" class="mb-4">
+            <div class="form-group">
+                <label for="trainingData">训练数据</label>
+                <input type="file" class="form-control-file" id="trainingData" required multiple>
+            </div>
+            
+            <div class="form-group">
+                <label for="epochs">训练轮次</label>
+                <input type="number" class="form-control" id="epochs" value="10" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label for="batchSize">批次大小</label>
+                <input type="number" class="form-control" id="batchSize" value="32" min="1">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" id="startTraining">开始训练</button>
+        </form>
+
+        <div id="trainingStatus" style="display: none;">
+            <h4>训练进度</h4>
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+            <div id="statusText" class="mb-3"></div>
+            
+            <h4>训练日志</h4>
+            <div id="logArea" class="mb-3"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/static/js/training.js"></script>
+</body>
+</html> 
