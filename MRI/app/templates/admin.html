@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员控制台 - "智绘影"MRI重建系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <!-- 加载主题工具脚本 -->
+    <script src="/static/js/theme-utils.js"></script>
+    <style>
+        .admin-sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            padding-top: 20px;
+            background-color: var(--bs-light);
+            border-right: 1px solid var(--bs-border-color);
+        }
+        .admin-content {
+            padding: 20px;
+        }
+        .feedback-card {
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            border-left: 4px solid #6c757d;
+        }
+        .feedback-card.pending {
+            border-left-color: #ffc107;
+        }
+        .feedback-card.processing {
+            border-left-color: #0d6efd;
+        }
+        .feedback-card.resolved {
+            border-left-color: #198754;
+        }
+        .feedback-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .feedback-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-processing {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        .status-resolved {
+            background-color: #d1e7dd;
+            color: #0a3622;
+        }
+        .user-section {
+            display: none;
+        }
+        .feedback-section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .nav-link {
+            cursor: pointer;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--bs-primary);
+        }
+        .admin-title {
+            border-bottom: 2px solid var(--bs-border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-hospital me-2"></i> "智绘影"MRI重建系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image"></i> MRI重建</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/medical-qa"><i class="bi bi-chat-dots"></i> 智能问诊</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up"></i> 数据看板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i> 设置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about"><i class="bi bi-info-circle"></i> 关于我们</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/my-feedback"><i class="bi bi-chat-square-text"></i> 我的反馈</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin"><i class="bi bi-shield-lock"></i> 管理控制台</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="text-light me-3">管理员: <span id="currentUsername">用户</span></span>
+                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right me-1"></i>退出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-3 col-lg-2 admin-sidebar">
+                <h5 class="text-center mb-4">管理控制台</h5>
+                <div class="nav flex-column nav-pills">
+                    <a class="nav-link active" data-section="feedback-section">
+                        <i class="bi bi-chat-left-text me-2"></i>用户反馈管理
+                    </a>
+                    <a class="nav-link" data-section="user-section">
+                        <i class="bi bi-people me-2"></i>用户管理
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 主内容区 -->
+            <div class="col-md-9 col-lg-10 admin-content">
+                <!-- 用户反馈管理 -->
+                <div class="feedback-section section active" id="feedback-section">
+                    <h2 class="admin-title"><i class="bi bi-chat-left-text me-2"></i>用户反馈管理</h2>
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="搜索反馈..." id="feedbackSearch">
+                                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="btn-group float-md-end" role="group">
+                                    <button type="button" class="btn btn-outline-primary active" data-filter="all">所有</button>
+                                    <button type="button" class="btn btn-outline-warning" data-filter="pending">待处理</button>
+                                    <button type="button" class="btn btn-outline-info" data-filter="processing">处理中</button>
+                                    <button type="button" class="btn btn-outline-success" data-filter="resolved">已解决</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="feedbackList">
+                        <!-- 加载中提示 -->
+                        <div class="text-center my-5" id="loadingIndicator">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                            <p class="mt-2">正在加载反馈数据...</p>
+                        </div>
+                        
+                        <!-- 反馈列表将通过JS动态添加到这里 -->
+                    </div>
+                </div>
+                
+                <!-- 用户管理 -->
+                <div class="user-section section" id="user-section">
+                    <h2 class="admin-title"><i class="bi bi-people me-2"></i>用户管理</h2>
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="搜索用户..." id="userSearch">
+                                    <button class="btn btn-outline-secondary" type="button" id="userSearchButton">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="btn-group float-md-end" role="group">
+                                    <button type="button" class="btn btn-outline-primary active" data-role="all">所有用户</button>
+                                    <button type="button" class="btn btn-outline-success" data-role="user">普通用户</button>
+                                    <button type="button" class="btn btn-outline-danger" data-role="admin">管理员</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="userList">
+                        <!-- 加载中提示 -->
+                        <div class="text-center my-5" id="userLoadingIndicator">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                            <p class="mt-2">正在加载用户数据...</p>
+                        </div>
+                        
+                        <!-- 用户列表将通过JS动态添加到这里 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+
+    <!-- 反馈详情和回复Modal -->
+    <div class="modal fade" id="feedbackDetailModal" tabindex="-1" aria-labelledby="feedbackDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feedbackDetailModalLabel">反馈详情与回复</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="feedbackDetailContent">
+                        <!-- 反馈详情将通过JS动态添加到这里 -->
+                    </div>
+                    <hr>
+                    <form id="replyForm" class="mt-4">
+                        <h5><i class="bi bi-reply me-2"></i>管理员回复</h5>
+                        <input type="hidden" id="feedbackId">
+                        <div class="mb-3">
+                            <label for="statusSelect" class="form-label">更新状态</label>
+                            <select class="form-select" id="statusSelect">
+                                <option value="pending">待处理</option>
+                                <option value="processing">处理中</option>
+                                <option value="resolved">已解决</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="replyContent" class="form-label">回复内容</label>
+                            <textarea class="form-control" id="replyContent" rows="4" placeholder="请输入回复内容..."></textarea>
+                        </div>
+                    </form>
+                    <div id="replyMessage" class="alert" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="submitReply">
+                        <span id="replySubmitText">提交回复</span>
+                        <span id="replyLoading" class="spinner-border spinner-border-sm ms-1" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查用户是否是管理员
+            if (localStorage.getItem('user_role') !== 'admin') {
+                alert('您没有权限访问此页面');
+                window.location.href = '/dashboard';
+                return;
+            }
+            
+            // 显示当前用户名
+            document.getElementById('currentUsername').textContent = localStorage.getItem('username') || '管理员';
+            
+            // 侧边栏导航
+            const navLinks = document.querySelectorAll('.nav-link[data-section]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    // 切换激活的导航链接
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    // 显示相应的内容区域
+                    const sections = document.querySelectorAll('.section');
+                    sections.forEach(section => section.classList.remove('active'));
+                    
+                    const targetSection = link.getAttribute('data-section');
+                    document.getElementById(targetSection).classList.add('active');
+                    
+                    // 如果点击的是用户管理，加载用户列表
+                    if (targetSection === 'user-section') {
+                        loadUsers();
+                    }
+                    // 如果点击的是反馈管理，加载反馈列表
+                    else if (targetSection === 'feedback-section') {
+                        loadFeedbacks();
+                    }
+                });
+            });
+            
+            // 初次加载反馈列表
+            loadFeedbacks();
+            
+            // 反馈状态过滤按钮
+            const filterButtons = document.querySelectorAll('[data-filter]');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    const filter = button.getAttribute('data-filter');
+                    filterFeedbacks(filter);
+                });
+            });
+            
+            // 用户角色过滤按钮
+            const roleButtons = document.querySelectorAll('[data-role]');
+            roleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    roleButtons.forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    const role = button.getAttribute('data-role');
+                    filterUsers(role);
+                });
+            });
+            
+            // 反馈搜索
+            document.getElementById('searchButton').addEventListener('click', () => {
+                const searchText = document.getElementById('feedbackSearch').value.trim().toLowerCase();
+                searchFeedbacks(searchText);
+            });
+            
+            // 用户搜索
+            document.getElementById('userSearchButton').addEventListener('click', () => {
+                const searchText = document.getElementById('userSearch').value.trim().toLowerCase();
+                searchUsers(searchText);
+            });
+            
+            // 回复提交
+            document.getElementById('submitReply').addEventListener('click', async () => {
+                const feedbackId = document.getElementById('feedbackId').value;
+                const status = document.getElementById('statusSelect').value;
+                const reply = document.getElementById('replyContent').value.trim();
+                
+                // 显示加载状态
+                const submitButton = document.getElementById('submitReply');
+                const submitText = document.getElementById('replySubmitText');
+                const loadingSpinner = document.getElementById('replyLoading');
+                const messageDiv = document.getElementById('replyMessage');
+                
+                submitButton.disabled = true;
+                submitText.textContent = '提交中...';
+                loadingSpinner.style.display = 'inline-block';
+                messageDiv.style.display = 'none';
+                
+                try {
+                    const response = await fetch(`/api/feedback/${feedbackId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                        },
+                        body: JSON.stringify({
+                            status,
+                            reply
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // 提交成功
+                        messageDiv.textContent = '回复已成功提交！';
+                        messageDiv.className = 'alert alert-success';
+                        
+                        // 2秒后关闭Modal并刷新列表
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackDetailModal'));
+                            modal.hide();
+                            loadFeedbacks(); // 重新加载反馈列表
+                        }, 2000);
+                    } else {
+                        // 提交失败
+                        const errorData = await response.json();
+                        messageDiv.textContent = errorData.detail || '提交失败，请稍后再试';
+                        messageDiv.className = 'alert alert-danger';
+                    }
+                } catch (error) {
+                    console.error('提交回复出错:', error);
+                    messageDiv.textContent = '网络错误，请检查您的连接';
+                    messageDiv.className = 'alert alert-danger';
+                } finally {
+                    // 恢复按钮状态
+                    submitButton.disabled = false;
+                    submitText.textContent = '提交回复';
+                    loadingSpinner.style.display = 'none';
+                    messageDiv.style.display = 'block';
+                }
+            });
+        });
+        
+        // 加载反馈列表
+        async function loadFeedbacks() {
+            const feedbackList = document.getElementById('feedbackList');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            // 显示加载指示器
+            feedbackList.innerHTML = '';
+            loadingIndicator.style.display = 'block';
+            feedbackList.appendChild(loadingIndicator);
+            
+            try {
+                const response = await fetch('/api/feedback/all', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const feedbacks = await response.json();
+                    
+                    // 存储反馈数据，用于过滤和搜索
+                    window.feedbacksData = feedbacks;
+                    
+                    // 清空加载指示器
+                    feedbackList.innerHTML = '';
+                    
+                    // 检查是否有反馈
+                    if (feedbacks.length === 0) {
+                        feedbackList.innerHTML = '<div class="alert alert-info">暂无反馈数据</div>';
+                    } else {
+                        // 创建反馈列表
+                        renderFeedbacks(feedbacks);
+                    }
+                } else {
+                    // 处理错误
+                    const errorData = await response.json();
+                    feedbackList.innerHTML = `<div class="alert alert-danger">${errorData.detail || '加载反馈失败，请刷新页面重试'}</div>`;
+                }
+            } catch (error) {
+                console.error('加载反馈出错:', error);
+                feedbackList.innerHTML = '<div class="alert alert-danger">网络错误，请检查您的连接</div>';
+            }
+        }
+        
+        // 渲染反馈列表
+        function renderFeedbacks(feedbacks) {
+            const feedbackList = document.getElementById('feedbackList');
+            feedbackList.innerHTML = '';
+            
+            const table = document.createElement('table');
+            table.className = 'table table-hover';
+            
+            // 创建表头
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th>ID</th>
+                    <th>标题</th>
+                    <th>用户</th>
+                    <th>状态</th>
+                    <th>提交时间</th>
+                    <th>操作</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+            
+            // 创建表体
+            const tbody = document.createElement('tbody');
+            
+            feedbacks.forEach(feedback => {
+                // 格式化状态显示
+                let statusClass = '';
+                let statusText = '';
+                
+                switch (feedback.status) {
+                    case 'pending':
+                        statusClass = 'status-pending';
+                        statusText = '待处理';
+                        break;
+                    case 'processing':
+                        statusClass = 'status-processing';
+                        statusText = '处理中';
+                        break;
+                    case 'resolved':
+                        statusClass = 'status-resolved';
+                        statusText = '已解决';
+                        break;
+                }
+                
+                // 创建日期格式化
+                const createdDate = new Date(feedback.created_at);
+                const formattedDate = `${createdDate.getFullYear()}-${(createdDate.getMonth() + 1).toString().padStart(2, '0')}-${createdDate.getDate().toString().padStart(2, '0')}`;
+                
+                const tr = document.createElement('tr');
+                tr.className = `feedback-row ${feedback.status}`;
+                tr.innerHTML = `
+                    <td>${feedback.id}</td>
+                    <td>${feedback.title}</td>
+                    <td>${feedback.user_id}</td>
+                    <td><span class="feedback-status ${statusClass}">${statusText}</span></td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary view-reply" data-id="${feedback.id}">
+                            <i class="bi bi-eye me-1"></i>查看/回复
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(tbody);
+            feedbackList.appendChild(table);
+            
+            // 为查看/回复按钮添加事件监听
+            document.querySelectorAll('.view-reply').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const feedbackId = e.target.getAttribute('data-id') || e.target.closest('button').getAttribute('data-id');
+                    showFeedbackDetail(feedbackId);
+                });
+            });
+        }
+        
+        // 显示反馈详情
+        async function showFeedbackDetail(feedbackId) {
+            const detailContent = document.getElementById('feedbackDetailContent');
+            const modal = new bootstrap.Modal(document.getElementById('feedbackDetailModal'));
+            const statusSelect = document.getElementById('statusSelect');
+            const replyContent = document.getElementById('replyContent');
+            
+            // 显示加载状态
+            detailContent.innerHTML = `
+                <div class="text-center my-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-2">正在加载反馈详情...</p>
+                </div>
+            `;
+            
+            // 设置反馈ID
+            document.getElementById('feedbackId').value = feedbackId;
+            
+            // 显示modal
+            modal.show();
+            
+            try {
+                const response = await fetch(`/api/feedback/${feedbackId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const feedback = await response.json();
+                    
+                    // 格式化状态显示
+                    let statusClass = '';
+                    let statusText = '';
+                    
+                    switch (feedback.status) {
+                        case 'pending':
+                            statusClass = 'status-pending';
+                            statusText = '待处理';
+                            break;
+                        case 'processing':
+                            statusClass = 'status-processing';
+                            statusText = '处理中';
+                            break;
+                        case 'resolved':
+                            statusClass = 'status-resolved';
+                            statusText = '已解决';
+                            break;
+                    }
+                    
+                    // 创建日期格式化
+                    const createdDate = new Date(feedback.created_at);
+                    const formattedDate = `${createdDate.getFullYear()}-${(createdDate.getMonth() + 1).toString().padStart(2, '0')}-${createdDate.getDate().toString().padStart(2, '0')} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    // 更新modal标题
+                    document.getElementById('feedbackDetailModalLabel').textContent = `反馈详情: ${feedback.title}`;
+                    
+                    // 填充内容
+                    detailContent.innerHTML = `
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
+                            <span class="feedback-status ${statusClass}">${statusText}</span>
+                            <small class="text-muted">反馈ID: ${feedback.id}</small>
+                        </div>
+                        <div class="mb-3">
+                            <h5>反馈标题</h5>
+                            <p>${feedback.title}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h5>用户ID</h5>
+                            <p>${feedback.user_id}</p>
+                        </div>
+                        <div class="mb-4">
+                            <h5>反馈内容</h5>
+                            <p>${feedback.content.replace(/\n/g, '<br>')}</p>
+                            <div class="text-muted">
+                                <small>提交时间: ${formattedDate}</small>
+                            </div>
+                        </div>
+                        ${feedback.reply ? `
+                            <div class="alert alert-info">
+                                <h5>之前的回复</h5>
+                                <p>${feedback.reply}</p>
+                                <div class="text-muted">
+                                    <small>回复时间: ${new Date(feedback.replied_at).toLocaleString()}</small>
+                                </div>
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    // 设置状态下拉框的默认值
+                    statusSelect.value = feedback.status;
+                    
+                    // 如果有之前的回复，则填充到回复框
+                    replyContent.value = feedback.reply || '';
+                } else {
+                    // 处理错误
+                    const errorData = await response.json();
+                    detailContent.innerHTML = `<div class="alert alert-danger">${errorData.detail || '加载反馈详情失败'}</div>`;
+                }
+            } catch (error) {
+                console.error('加载反馈详情出错:', error);
+                detailContent.innerHTML = '<div class="alert alert-danger">网络错误，请检查您的连接</div>';
+            }
+        }
+        
+        // 过滤反馈
+        function filterFeedbacks(status) {
+            if (!window.feedbacksData) return;
+            
+            const feedbacks = window.feedbacksData;
+            
+            if (status === 'all') {
+                renderFeedbacks(feedbacks);
+            } else {
+                const filtered = feedbacks.filter(feedback => feedback.status === status);
+                renderFeedbacks(filtered);
+            }
+        }
+        
+        // 搜索反馈
+        function searchFeedbacks(text) {
+            if (!window.feedbacksData || !text) {
+                // 如果没有输入搜索文本，显示所有反馈
+                if (!text) {
+                    renderFeedbacks(window.feedbacksData);
+                }
+                return;
+            }
+            
+            const feedbacks = window.feedbacksData;
+            const filtered = feedbacks.filter(feedback => 
+                feedback.title.toLowerCase().includes(text) || 
+                feedback.content.toLowerCase().includes(text)
+            );
+            
+            renderFeedbacks(filtered);
+        }
+        
+        // 加载用户列表
+        async function loadUsers() {
+            const userList = document.getElementById('userList');
+            const loadingIndicator = document.getElementById('userLoadingIndicator');
+            
+            // 显示加载指示器
+            userList.innerHTML = '';
+            loadingIndicator.style.display = 'block';
+            userList.appendChild(loadingIndicator);
+            
+            try {
+                const response = await fetch('/api/auth/users', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const users = await response.json();
+                    
+                    // 存储用户数据，用于过滤和搜索
+                    window.usersData = users;
+                    
+                    // 清空加载指示器
+                    userList.innerHTML = '';
+                    
+                    // 检查是否有用户
+                    if (users.length === 0) {
+                        userList.innerHTML = '<div class="alert alert-info">暂无用户数据</div>';
+                    } else {
+                        // 创建用户列表
+                        renderUsers(users);
+                    }
+                } else {
+                    // 处理错误
+                    const errorData = await response.json();
+                    userList.innerHTML = `<div class="alert alert-danger">${errorData.detail || '加载用户失败，请刷新页面重试'}</div>`;
+                }
+            } catch (error) {
+                console.error('加载用户出错:', error);
+                userList.innerHTML = '<div class="alert alert-danger">用户API未实现，请直接查看反馈数据</div>';
+            }
+        }
+        
+        // 渲染用户列表
+        function renderUsers(users) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            
+            const table = document.createElement('table');
+            table.className = 'table table-hover';
+            
+            // 创建表头
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>邮箱</th>
+                    <th>角色</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+            
+            // 创建表体
+            const tbody = document.createElement('tbody');
+            
+            users.forEach(user => {
+                // 创建日期格式化
+                const createdDate = new Date(user.created_at);
+                const formattedDate = `${createdDate.getFullYear()}-${(createdDate.getMonth() + 1).toString().padStart(2, '0')}-${createdDate.getDate().toString().padStart(2, '0')}`;
+                
+                const tr = document.createElement('tr');
+                tr.className = `user-row ${user.role}`;
+                tr.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-success'}">
+                            ${user.role === 'admin' ? '管理员' : '普通用户'}
+                        </span>
+                    </td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info user-detail" data-id="${user.id}">
+                            <i class="bi bi-eye me-1"></i>详情
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(tbody);
+            userList.appendChild(table);
+        }
+        
+        // 过滤用户
+        function filterUsers(role) {
+            if (!window.usersData) return;
+            
+            const users = window.usersData;
+            
+            if (role === 'all') {
+                renderUsers(users);
+            } else {
+                const filtered = users.filter(user => user.role === role);
+                renderUsers(filtered);
+            }
+        }
+        
+        // 搜索用户
+        function searchUsers(text) {
+            if (!window.usersData || !text) {
+                // 如果没有输入搜索文本，显示所有用户
+                if (!text) {
+                    renderUsers(window.usersData);
+                }
+                return;
+            }
+            
+            const users = window.usersData;
+            const filtered = users.filter(user => 
+                user.username.toLowerCase().includes(text) || 
+                user.email.toLowerCase().includes(text)
+            );
+            
+            renderUsers(filtered);
+        }
+    </script>
+</body>
+</html> 

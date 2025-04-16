@@ -1,0 +1,423 @@
+:root {
+    /* 医疗增强型配色系统 */
+    --primary-color: #00607A; /* 深海蓝 - 主色调 - 传递专业感，降低视觉疲劳 */
+    --secondary-color: #E3F2FD; /* 医用蓝白 - 辅助色 - 提升屏幕可读性，减少眩光 */
+    --highlight-color: #00B0FF; /* 荧光蓝 - 高亮色 - 用于3D重建标记，符合DICOM标准 */
+    --alert-color: #D32F2F; /* 凝血红 - 警示区 - 紧急异常区域提示 */
+    --safe-color: #388E3C; /* 叶绿 - 安全区 - 正常指标标识 */
+    --background-color: #FAFAFA; /* 灰白 - 背景色 - 符合医疗显示器校准标准 */
+    --dark-bg-color: #121212; /* OLED黑 - 夜间模式背景 */
+    --amber-text: #FFC107; /* 琥珀色 - 夜间模式文字 */
+
+    /* 字体大小和行高 */
+    --font-size-base: 16px;
+    --line-height-base: 1.5;
+    --border-radius-base: 8px;
+    
+    /* 动画持续时间 */
+    --transition-slow: 0.5s;
+    --transition-medium: 0.3s;
+    --transition-fast: 0.15s;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+    background-color: var(--background-color);
+    background-image: linear-gradient(135deg, rgba(0, 96, 122, 0.05) 0%, rgba(0, 176, 255, 0.1) 100%);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    transition: all var(--transition-medium);
+    line-height: var(--line-height-base);
+    font-size: var(--font-size-base);
+    padding-top: 60px; /* 添加顶部内边距，防止导航栏遮挡内容 */
+}
+
+body.night-mode {
+    background-color: var(--dark-bg-color);
+    background-image: none;
+    color: var(--amber-text);
+}
+
+.login-container {
+    background-color: white;
+    border-radius: var(--border-radius-base);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 35px;
+    width: 380px;
+    max-width: 90%;
+    position: relative;
+    overflow: hidden;
+    animation: fade-in 0.5s ease-out;
+    transition: all var(--transition-medium);
+}
+
+.night-mode .login-container {
+    background-color: #1E1E1E;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+}
+
+.login-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.night-mode h1 {
+    color: var(--amber-text);
+}
+
+h1::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background-color: var(--highlight-color);
+}
+
+.form-group {
+    margin-bottom: 22px;
+    position: relative;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.night-mode label {
+    color: #E0E0E0;
+}
+
+input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #E0E0E0;
+    border-radius: var(--border-radius-base);
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: all var(--transition-fast);
+    background-color: white;
+}
+
+.night-mode input {
+    background-color: #333;
+    border-color: #555;
+    color: #E0E0E0;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 96, 122, 0.2);
+}
+
+.input-icon {
+    position: absolute;
+    top: 40px;
+    right: 15px;
+    color: #999;
+}
+
+.night-mode .input-icon {
+    color: #777;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-base);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+button:hover::after {
+    transform: translateX(0);
+}
+
+button:hover {
+    background-color: #00506A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:disabled {
+    background-color: #90A4AE;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.message {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: var(--border-radius-base);
+    text-align: center;
+    font-size: 14px;
+    animation: message-fade-in 0.3s ease-out;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+@keyframes message-fade-in {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.error {
+    background-color: rgba(211, 47, 47, 0.1);
+    color: var(--alert-color);
+    border-left: 4px solid var(--alert-color);
+}
+
+.success {
+    background-color: rgba(56, 142, 60, 0.1);
+    color: var(--safe-color);
+    border-left: 4px solid var(--safe-color);
+}
+
+.register-link {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 15px;
+    color: #555;
+}
+
+.night-mode .register-link {
+    color: #E0E0E0;
+}
+
+.register-link a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.night-mode .register-link a {
+    color: var(--highlight-color);
+}
+
+.register-link a:hover {
+    color: var(--highlight-color);
+    text-decoration: underline;
+}
+
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {transform: rotate(360deg);}
+}
+
+/* 主题切换开关 */
+.theme-switch-wrapper {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 24px;
+    position: relative;
+    width: 48px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.slider {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    background-color: white;
+    bottom: 4px;
+    content: "";
+    height: 16px;
+    left: 4px;
+    position: absolute;
+    transition: .4s;
+    width: 16px;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--dark-bg-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+    background-color: var(--amber-text);
+}
+
+/* 高对比度模式 */
+body.high-contrast {
+    --primary-color: #003D55;
+    --secondary-color: #FFFFFF;
+    --highlight-color: #0066CC;
+    --background-color: #FFFFFF;
+    font-size: 18px;
+    line-height: 1.8;
+}
+
+.high-contrast input {
+    border: 2px solid #000;
+}
+
+.high-contrast button {
+    background-color: #003D55;
+}
+
+.medical-logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.medical-logo svg {
+    width: 60px;
+    height: 60px;
+    fill: var(--primary-color);
+}
+
+.night-mode .medical-logo svg {
+    fill: var(--amber-text);
+}
+
+/* 辅助功能指示器 */
+.accessibility-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+}
+
+.accessibility-indicator:hover {
+    opacity: 1;
+}
+
+/* 老年人辅助功能面板 */
+.accessibility-panel {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    background-color: white;
+    padding: 20px;
+    border-radius: var(--border-radius-base);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 250px;
+    display: none;
+}
+
+.night-mode .accessibility-panel {
+    background-color: #1E1E1E;
+    border: 1px solid #333;
+}
+
+.font-size-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.font-size-btn {
+    flex: 1;
+    padding: 5px;
+    border: none;
+    background-color: var(--secondary-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.font-size-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.night-mode .font-size-btn {
+    background-color: #333;
+    color: #E0E0E0;
+}
+
+.night-mode .font-size-btn:hover {
+    background-color: var(--amber-text);
+    color: black;
+} 

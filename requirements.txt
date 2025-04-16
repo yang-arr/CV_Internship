@@ -1,0 +1,62 @@
+# Web框架
+fastapi>=0.95.0
+uvicorn>=0.21.0
+jinja2>=3.1.2
+python-multipart>=0.0.6
+aiofiles>=23.1.0
+websockets>=10.4
+
+# 安全与认证
+python-jose>=3.3.0
+passlib>=1.7.4
+bcrypt>=4.0.1
+cryptography>=40.0.1
+
+# 数据库
+sqlalchemy>=2.0.7
+alembic>=1.10.2
+
+# 数据处理
+numpy>=1.24.2
+pandas>=2.0.0
+scipy>=1.10.1
+scikit-learn>=1.2.2
+scikit-image>=0.20.0
+matplotlib>=3.7.1
+pillow>=9.5.0
+
+# 深度学习
+torch>=2.0.0
+torchvision>=0.15.1
+
+# 医学图像处理（可选）
+monai>=1.2.0
+SimpleITK>=2.2.1
+# antspyx>=0.3.5  # 可选，安装复杂，需要单独安装
+
+# 其他工具
+pydantic>=1.10.7
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+httpx>=0.24.0
+asyncio>=3.4.3
+joblib>=1.2.0
+
+# 图表生成与报告
+reportlab>=3.6.12  # PDF报告生成
+
+# 数据可视化
+Pillow==10.0.0
+opencv-python==4.8.0.76
+
+# 工具
+pyyaml==6.0.1
+
+# 测试
+pytest==7.4.0
+
+# 语音相关
+SpeechRecognition==3.10.0
+gTTS==2.3.2
+PyAudio==0.2.13
+pydub==0.25.1 

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医疗专家问答系统 - "智绘影"MRI重建系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/medical_qa.css">
+    <!-- 加载主题工具脚本 -->
+    <script src="/static/js/theme-utils.js"></script>
+</head>
+<body>
+    <!-- 必须在页面开头引入Marked.js库，用于Markdown渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.0.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.3.3/dist/purify.min.js"></script>
+
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-hospital me-2"></i> "智绘影"MRI重建系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image"></i> MRI重建</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/medical-qa"><i class="bi bi-chat-dots"></i> 智能问诊</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up"></i> 数据看板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i> 设置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about"><i class="bi bi-info-circle"></i> 关于我们</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right me-1"></i>退出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="medical-header">
+        <div class="container">
+            <h1 class="medical-title text-center">"智绘影"医疗专家问答系统</h1>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- 历史对话侧边栏 -->
+        <div id="historySidebar" class="">
+            <div class="sidebar-header">
+                <div class="sidebar-title">历史对话</div>
+                <button id="toggleSidebarBtn" class="btn sidebar-toggle-btn" title="收起侧边栏">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </div>
+            
+            <!-- 搜索框 -->
+            <div class="sidebar-search">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="historySearchInput" class="form-control" placeholder="搜索历史对话...">
+                </div>
+            </div>
+            
+            <!-- 历史记录列表 -->
+            <div id="historyList" class="history-list">
+                <div class="history-empty">
+                    <i class="bi bi-clock-history"></i>
+                    <p>暂无历史记录</p>
+                </div>
+            </div>
+            
+            <!-- 底部按钮 -->
+            <div class="sidebar-footer">
+                <button id="newChatBtn" class="btn btn-primary mb-2 w-100">
+                    <i class="bi bi-plus-circle me-1"></i> 新建会话
+                </button>
+                <button id="clearHistoryBtn" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-trash"></i> 清空全部历史
+                </button>
+            </div>
+            
+            <!-- 侧边栏收起时显示的图标 -->
+            <div class="sidebar-icons">
+                <button id="historyIcon" class="sidebar-icon-btn" title="历史对话">
+                    <i class="bi bi-clock-history"></i>
+                </button>
+                <button id="newChatIcon" class="sidebar-icon-btn" title="新建对话">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 语音功能介绍卡片 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle-fill me-2"></i>语音交互功能</h5>
+                <p class="card-text">您现在可以通过语音与医疗助手进行交流：</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="bi bi-mic-fill text-primary me-2"></i> 点击麦克风按钮开始语音输入</li>
+                    <li class="mb-2"><i class="bi bi-volume-up-fill text-success me-2"></i> 点击语音播报按钮开启/关闭AI回答的语音朗读</li>
+                    <li class="mb-2"><i class="bi bi-play-fill text-success me-2"></i> 点击消息右下角的播放按钮可朗读该条消息</li>
+                </ul>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="autoReadToggle">
+                    <label class="form-check-label" for="autoReadToggle">自动朗读AI回答</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chat-container border" id="chatContainer">
+                    <!-- AI脑电波思考状态 -->
+                    <div class="brain-wave" id="brainWave">
+                        <svg viewBox="0 0 1000 100">
+                            <path class="brain-wave-path" d="M0,50 Q200,10 300,50 T600,50 T900,50" />
+                        </svg>
+                    </div>
+                    
+                    <!-- 医学加载动画 -->
+                    <div class="medical-loader" id="medicalLoader"></div>
+                    
+                    <!-- 思考中状态指示器 -->
+                    <div id="thinkingState" class="thinking-state hidden">
+                        <div class="thinking-spinner me-2"></div>
+                        <div class="thinking-text">思考中...</div>
+                    </div>
+                    
+                    <!-- 示例对话，包含思维链 -->
+                    <div class="message user-message">
+                        MRI对检测脑肿瘤有什么优势？
+                    </div>
+                    
+                    <div class="message ai-message">
+                        <div class="thinking-container">
+                            <div class="thinking-badge">思考过程</div>
+                            <div class="thinking-step">1. 首先我需要思考MRI相对于其他成像技术（如CT）在脑肿瘤检测中的关键优势。</div>
+                            <div class="thinking-step">2. MRI成像原理基于强磁场中氢质子的共振特性，这使它在软组织成像方面具有天然优势。</div>
+                            <div class="thinking-step">3. 脑肿瘤检测需要什么？高对比度、多角度评估、功能评估等，这些恰好是MRI的优势所在。</div>
+                            <div class="thinking-step">4. 还需要考虑临床应用中的实际情况，如安全性、随访需求等因素。</div>
+                            <div class="thinking-step">5. 综合以上分析，可以总结出MRI在脑肿瘤检测中的多项优势。</div>
+                        </div>
+                        
+                        <div class="ai-content">
+                            <h3>MRI在脑肿瘤检测中的优势</h3>
+                            <p>MRI（磁共振成像）在脑肿瘤检测方面具有显著优势：</p>
+                            <ul>
+                                <li><strong>软组织对比度高</strong>：MRI能提供极佳的软组织对比度，可以清晰区分脑组织中的正常和异常区域。</li>
+                                <li><strong>多参数成像</strong>：通过T1、T2加权、FLAIR等不同序列，可以从多角度显示肿瘤特征。</li>
+                                <li><strong>无电离辐射</strong>：相比CT，MRI不使用电离辐射，对患者更安全，特别适合需要长期随访的患者。</li>
+                                <li><strong>功能成像能力</strong>：如扩散加权成像(DWI)、灌注成像和功能MRI可评估肿瘤代谢活性和周围脑组织功能。</li>
+                                <li><strong>多平面成像</strong>：可以在任意平面获取高质量图像，而不需要重建。</li>
+                            </ul>
+                            <p>对于脑肿瘤的诊断与分级，MRI已成为首选的影像学检查方法。</p>
+                        </div>
+                        
+                        <i class="bi bi-play-fill play-button" data-text="MRI在脑肿瘤检测中的优势。MRI（磁共振成像）在脑肿瘤检测方面具有显著优势：软组织对比度高，MRI能提供极佳的软组织对比度，可以清晰区分脑组织中的正常和异常区域。多参数成像，通过T1、T2加权、FLAIR等不同序列，可以从多角度显示肿瘤特征。无电离辐射，相比CT，MRI不使用电离辐射，对患者更安全，特别适合需要长期随访的患者。功能成像能力，如扩散加权成像(DWI)、灌注成像和功能MRI可评估肿瘤代谢活性和周围脑组织功能。多平面成像，可以在任意平面获取高质量图像，而不需要重建。对于脑肿瘤的诊断与分级，MRI已成为首选的影像学检查方法。"></i>
+                    </div>
+                    
+                    <!-- 欢迎消息 -->
+                    <div class="ai-message message">
+                        <p>您好！我是您的AI医疗助手。请问有什么可以帮您？</p>
+                        <i class="bi bi-play-fill play-button" data-text="您好！我是您的AI医疗助手。请问有什么可以帮您？"></i>
+                    </div>
+                    
+                    <div class="typing-indicator ai-message message" id="typingIndicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="input-group mt-3">
+                    <input type="text" class="form-control" id="userInput" placeholder="请输入您的问题...">
+                    <button class="btn btn-primary" type="button" id="sendButton">
+                        <i class="bi bi-send me-1"></i>发送
+                    </button>
+                </div>
+                
+                <!-- 语音控制按钮 -->
+                <div class="voice-controls d-flex justify-content-center">
+                    <button class="voice-button voice-input-button" id="voiceInputButton" title="语音输入">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <button class="voice-button voice-output-button" id="voiceOutputButton" title="语音播报设置">
+                        <i class="bi bi-volume-up-fill"></i>
+                    </button>
+                    <button class="voice-button voice-stop-button" id="voiceStopButton" title="停止朗读">
+                        <i class="bi bi-stop-fill"></i>
+                    </button>
+                </div>
+                
+                <!-- 语音设置面板 -->
+                <div class="voice-settings" id="voiceSettings">
+                    <div class="form-group mb-3">
+                        <label for="voiceSelect">选择语音：</label>
+                        <select class="form-select" id="voiceSelect"></select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="rateRange">语速：</label>
+                        <input type="range" class="form-range" min="0.5" max="2" step="0.1" value="1" id="rateRange">
+                        <div class="d-flex justify-content-between">
+                            <span>慢</span>
+                            <span id="rateValue">1.0</span>
+                            <span>快</span>
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="pitchRange">音调：</label>
+                        <input type="range" class="form-range" min="0.5" max="2" step="0.1" value="1" id="pitchRange">
+                        <div class="d-flex justify-content-between">
+                            <span>低</span>
+                            <span id="pitchValue">1.0</span>
+                            <span>高</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-secondary w-100" id="testVoiceButton">测试语音</button>
+                </div>
+                
+                <div class="text-muted mt-3 text-center">
+                    <small>注意：本系统仅供参考，不能替代专业医生的诊断和建议。</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 历史会话删除确认弹窗 -->
+    <div class="modal fade" id="deleteHistoryModal" tabindex="-1" aria-labelledby="deleteHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteHistoryModalLabel">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除这个会话记录吗？此操作无法撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清空所有历史记录确认弹窗 -->
+    <div class="modal fade" id="clearAllHistoryModal" tabindex="-1" aria-labelledby="clearAllHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clearAllHistoryModalLabel">确认清空</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要清空所有历史会话记录吗？此操作无法撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmClearAllBtn">确认清空</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/medical_qa.js"></script>
+</body>
+</html> 

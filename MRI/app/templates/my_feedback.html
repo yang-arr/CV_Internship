@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的反馈 - "智绘影"MRI重建系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <!-- 加载主题工具脚本 -->
+    <script src="/static/js/theme-utils.js"></script>
+    <style>
+        .feedback-card {
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+            border-left: 4px solid #007bff;
+        }
+        .feedback-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .feedback-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .status-pending {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        .status-processing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-resolved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .reply-section {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 2rem;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .feedback-timestamp {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-hospital me-2"></i> "智绘影"MRI重建系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image"></i> MRI重建</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/medical-qa"><i class="bi bi-chat-dots"></i> 智能问诊</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up"></i> 数据看板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i> 设置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about"><i class="bi bi-info-circle"></i> 关于我们</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/my-feedback"><i class="bi bi-chat-square-text"></i> 我的反馈</a>
+                    </li>
+                    <li class="nav-item" id="adminLink" style="display: none;">
+                        <a class="nav-link" href="/admin"><i class="bi bi-shield-lock"></i> 管理控制台</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right me-1"></i>退出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1><i class="bi bi-chat-left-text me-2"></i>我的反馈</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
+                        <i class="bi bi-plus-circle me-2"></i>新建反馈
+                    </button>
+                </div>
+                <p class="text-muted">查看您提交的反馈和系统管理员的回复</p>
+            </div>
+        </div>
+
+        <!-- 反馈列表 -->
+        <div class="row" id="feedbackList">
+            <!-- 加载中提示 -->
+            <div class="col-12 text-center my-5" id="loadingIndicator">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="mt-2">正在加载您的反馈...</p>
+            </div>
+            
+            <!-- 空状态 - 初始隐藏 -->
+            <div class="col-12 empty-state" id="emptyState" style="display: none;">
+                <i class="bi bi-chat-square-text"></i>
+                <h3>您还没有提交任何反馈</h3>
+                <p class="text-muted">如有任何问题或建议，请点击上方的"新建反馈"按钮</p>
+                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
+                    <i class="bi bi-plus-circle me-2"></i>新建反馈
+                </button>
+            </div>
+            
+            <!-- 反馈卡片将通过JS动态添加到这里 -->
+        </div>
+    </div>
+
+    <!-- 新建反馈Modal -->
+    <div class="modal fade" id="newFeedbackModal" tabindex="-1" aria-labelledby="newFeedbackModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newFeedbackModalLabel">新建反馈</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newFeedbackForm">
+                        <div class="mb-3">
+                            <label for="newFeedbackTitle" class="form-label">标题</label>
+                            <input type="text" class="form-control" id="newFeedbackTitle" placeholder="请输入反馈标题" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newFeedbackContent" class="form-label">内容</label>
+                            <textarea class="form-control" id="newFeedbackContent" rows="5" placeholder="请详细描述您的问题或建议..." required></textarea>
+                        </div>
+                    </form>
+                    <div id="newFeedbackMessage" class="alert" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitNewFeedback">
+                        <span id="submitText">提交</span>
+                        <span id="submitLoading" class="spinner-border spinner-border-sm ms-1" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 反馈详情Modal -->
+    <div class="modal fade" id="feedbackDetailModal" tabindex="-1" aria-labelledby="feedbackDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feedbackDetailModalLabel">反馈详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="feedbackDetailContent">
+                        <!-- 反馈详情将通过JS动态添加到这里 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 "智绘影"MRI重建系统. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 获取DOM元素
+            const feedbackList = document.getElementById('feedbackList');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const emptyState = document.getElementById('emptyState');
+            const newFeedbackForm = document.getElementById('newFeedbackForm');
+            const newFeedbackTitle = document.getElementById('newFeedbackTitle');
+            const newFeedbackContent = document.getElementById('newFeedbackContent');
+            const submitNewFeedback = document.getElementById('submitNewFeedback');
+            const submitText = document.getElementById('submitText');
+            const submitLoading = document.getElementById('submitLoading');
+            const newFeedbackMessage = document.getElementById('newFeedbackMessage');
+            const adminLink = document.getElementById('adminLink');
+            
+            // 显示管理员入口（如果用户是管理员）
+            if (localStorage.getItem('user_role') === 'admin') {
+                adminLink.style.display = 'block';
+            }
+            
+            // 加载反馈列表
+            try {
+                const response = await fetch('/api/feedback/my', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const feedbacks = await response.json();
+                    
+                    // 隐藏加载指示器
+                    loadingIndicator.style.display = 'none';
+                    
+                    // 检查是否有反馈
+                    if (feedbacks.length === 0) {
+                        emptyState.style.display = 'block';
+                    } else {
+                        // 渲染反馈列表
+                        feedbacks.forEach(feedback => {
+                            const card = document.createElement('div');
+                            card.className = 'col-md-6 mb-4';
+                            
+                            // 格式化状态显示
+                            let statusClass = '';
+                            let statusText = '';
+                            
+                            switch (feedback.status) {
+                                case 'pending':
+                                    statusClass = 'status-pending';
+                                    statusText = '待处理';
+                                    break;
+                                case 'processing':
+                                    statusClass = 'status-processing';
+                                    statusText = '处理中';
+                                    break;
+                                case 'resolved':
+                                    statusClass = 'status-resolved';
+                                    statusText = '已解决';
+                                    break;
+                            }
+                            
+                            // 创建日期格式化
+                            const createdDate = new Date(feedback.created_at);
+                            const formattedDate = `${createdDate.getFullYear()}-${(createdDate.getMonth() + 1).toString().padStart(2, '0')}-${createdDate.getDate().toString().padStart(2, '0')} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
+                            
+                            // 回复部分HTML
+                            let replyHtml = '';
+                            if (feedback.reply) {
+                                const repliedDate = new Date(feedback.replied_at);
+                                const formattedRepliedDate = `${repliedDate.getFullYear()}-${(repliedDate.getMonth() + 1).toString().padStart(2, '0')}-${repliedDate.getDate().toString().padStart(2, '0')} ${repliedDate.getHours().toString().padStart(2, '0')}:${repliedDate.getMinutes().toString().padStart(2, '0')}`;
+                                
+                                replyHtml = `
+                                    <div class="reply-section">
+                                        <h6><i class="bi bi-reply me-2"></i>管理员回复</h6>
+                                        <p>${feedback.reply}</p>
+                                        <div class="feedback-timestamp text-end">
+                                            回复时间: ${formattedRepliedDate}
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            // 截取内容预览（最多100个字符）
+                            const contentPreview = feedback.content.length > 100 
+                                ? feedback.content.substring(0, 100) + '...' 
+                                : feedback.content;
+                            
+                            card.innerHTML = `
+                                <div class="card feedback-card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="card-title">${feedback.title}</h5>
+                                            <span class="feedback-status ${statusClass}">${statusText}</span>
+                                        </div>
+                                        <p class="card-text">${contentPreview}</p>
+                                        <div class="feedback-timestamp">
+                                            提交时间: ${formattedDate}
+                                        </div>
+                                        ${replyHtml}
+                                        <button class="btn btn-outline-primary btn-sm mt-3 view-details" data-id="${feedback.id}">
+                                            查看详情
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            feedbackList.appendChild(card);
+                        });
+                        
+                        // 为详情按钮添加事件监听
+                        document.querySelectorAll('.view-details').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                const feedbackId = e.target.getAttribute('data-id');
+                                showFeedbackDetail(feedbackId, feedbacks);
+                            });
+                        });
+                    }
+                } else {
+                    // 处理错误
+                    const errorData = await response.json();
+                    loadingIndicator.style.display = 'none';
+                    
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'col-12 alert alert-danger';
+                    errorDiv.textContent = errorData.detail || '加载反馈失败，请刷新页面重试';
+                    feedbackList.appendChild(errorDiv);
+                }
+            } catch (error) {
+                console.error('加载反馈出错:', error);
+                loadingIndicator.style.display = 'none';
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'col-12 alert alert-danger';
+                errorDiv.textContent = '网络错误，请检查您的连接';
+                feedbackList.appendChild(errorDiv);
+            }
+            
+            // 提交新反馈
+            submitNewFeedback.addEventListener('click', async () => {
+                // 表单验证
+                if (!newFeedbackTitle.value.trim() || !newFeedbackContent.value.trim()) {
+                    newFeedbackMessage.textContent = '请填写完整的反馈信息';
+                    newFeedbackMessage.className = 'alert alert-danger';
+                    newFeedbackMessage.style.display = 'block';
+                    return;
+                }
+                
+                // 显示加载状态
+                submitNewFeedback.disabled = true;
+                submitText.textContent = '提交中...';
+                submitLoading.style.display = 'inline-block';
+                newFeedbackMessage.style.display = 'none';
+                
+                try {
+                    const response = await fetch('/api/feedback/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                        },
+                        body: JSON.stringify({
+                            title: newFeedbackTitle.value,
+                            content: newFeedbackContent.value
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // 提交成功
+                        newFeedbackMessage.textContent = '反馈提交成功！';
+                        newFeedbackMessage.className = 'alert alert-success';
+                        
+                        // 清空表单
+                        newFeedbackTitle.value = '';
+                        newFeedbackContent.value = '';
+                        
+                        // 2秒后刷新页面
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        // 提交失败
+                        const errorData = await response.json();
+                        newFeedbackMessage.textContent = errorData.detail || '提交失败，请稍后再试';
+                        newFeedbackMessage.className = 'alert alert-danger';
+                    }
+                } catch (error) {
+                    console.error('提交反馈出错:', error);
+                    newFeedbackMessage.textContent = '网络错误，请检查您的连接';
+                    newFeedbackMessage.className = 'alert alert-danger';
+                } finally {
+                    // 恢复按钮状态
+                    submitNewFeedback.disabled = false;
+                    submitText.textContent = '提交';
+                    submitLoading.style.display = 'none';
+                    newFeedbackMessage.style.display = 'block';
+                }
+            });
+            
+            // 显示反馈详情
+            function showFeedbackDetail(feedbackId, feedbacks) {
+                const feedback = feedbacks.find(f => f.id == feedbackId);
+                if (!feedback) return;
+                
+                const detailContent = document.getElementById('feedbackDetailContent');
+                const modal = new bootstrap.Modal(document.getElementById('feedbackDetailModal'));
+                
+                // 格式化状态显示
+                let statusClass = '';
+                let statusText = '';
+                
+                switch (feedback.status) {
+                    case 'pending':
+                        statusClass = 'status-pending';
+                        statusText = '待处理';
+                        break;
+                    case 'processing':
+                        statusClass = 'status-processing';
+                        statusText = '处理中';
+                        break;
+                    case 'resolved':
+                        statusClass = 'status-resolved';
+                        statusText = '已解决';
+                        break;
+                }
+                
+                // 创建日期格式化
+                const createdDate = new Date(feedback.created_at);
+                const formattedDate = `${createdDate.getFullYear()}-${(createdDate.getMonth() + 1).toString().padStart(2, '0')}-${createdDate.getDate().toString().padStart(2, '0')} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
+                
+                // 回复部分HTML
+                let replyHtml = '';
+                if (feedback.reply) {
+                    const repliedDate = new Date(feedback.replied_at);
+                    const formattedRepliedDate = `${repliedDate.getFullYear()}-${(repliedDate.getMonth() + 1).toString().padStart(2, '0')}-${repliedDate.getDate().toString().padStart(2, '0')} ${repliedDate.getHours().toString().padStart(2, '0')}:${repliedDate.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    replyHtml = `
+                        <div class="reply-section mt-4">
+                            <h5 class="mb-3"><i class="bi bi-reply me-2"></i>管理员回复</h5>
+                            <p>${feedback.reply}</p>
+                            <div class="feedback-timestamp text-end">
+                                回复时间: ${formattedRepliedDate}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 更新modal标题
+                document.getElementById('feedbackDetailModalLabel').textContent = feedback.title;
+                
+                // 填充内容
+                detailContent.innerHTML = `
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <span class="feedback-status ${statusClass}">${statusText}</span>
+                        <small class="text-muted">反馈ID: ${feedback.id}</small>
+                    </div>
+                    <div class="mb-4">
+                        <h5>反馈内容</h5>
+                        <p>${feedback.content.replace(/\n/g, '<br>')}</p>
+                        <div class="feedback-timestamp">
+                            提交时间: ${formattedDate}
+                        </div>
+                    </div>
+                    ${replyHtml}
+                `;
+                
+                // 显示modal
+                modal.show();
+            }
+        });
+    </script>
+</body>
+</html> 

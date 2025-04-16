@@ -1,0 +1,306 @@
+:root {
+    /* 医疗增强型配色系统 */
+    --primary-color: #00607A; /* 深海蓝 - 主色调 - 传递专业感，降低视觉疲劳 */
+    --secondary-color: #E3F2FD; /* 医用蓝白 - 辅助色 - 提升屏幕可读性，减少眩光 */
+    --highlight-color: #00B0FF; /* 荧光蓝 - 高亮色 - 用于3D重建标记，符合DICOM标准 */
+    --alert-color: #D32F2F; /* 凝血红 - 警示区 - 紧急异常区域提示 */
+    --safe-color: #388E3C; /* 叶绿 - 安全区 - 正常指标标识 */
+    --background-color: #FAFAFA; /* 灰白 - 背景色 - 符合医疗显示器校准标准 */
+    --dark-bg-color: #121212; /* OLED黑 - 夜间模式背景 */
+    --amber-text: #FFC107; /* 琥珀色 - 夜间模式文字 */
+    --dark-card-bg: #1E1E1E; /* 深色卡片背景 */
+    --dark-text: #E0E0E0; /* 深色模式文本 */
+
+    /* 字体大小和行高 */
+    --font-size-base: 16px;
+    --line-height-base: 1.5;
+    --border-radius-base: 8px;
+    
+    /* 动画持续时间 */
+    --transition-slow: 0.5s;
+    --transition-medium: 0.3s;
+    --transition-fast: 0.15s;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+    background-color: var(--background-color);
+    background-image: linear-gradient(135deg, rgba(0, 96, 122, 0.03) 0%, rgba(0, 176, 255, 0.05) 100%);
+    color: #333;
+    margin: 0;
+    padding: 0;
+    line-height: var(--line-height-base);
+    font-size: var(--font-size-base);
+    transition: all var(--transition-medium);
+    min-height: 100vh;
+}
+
+/* 夜间模式样式 */
+body.night-mode {
+    background-color: var(--dark-bg-color);
+    background-image: none;
+    color: var(--dark-text);
+}
+
+.navbar {
+    background-color: var(--primary-color) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all var(--transition-medium);
+}
+
+.night-mode .navbar {
+    background-color: #002a36 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-brand, .nav-link {
+    color: white !important;
+    transition: all var(--transition-fast);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link i {
+    margin-right: 0.25rem;
+    font-size: 1rem;
+}
+
+.navbar-brand:hover, .nav-link:hover {
+    color: var(--secondary-color) !important;
+}
+
+.nav-link.active {
+    position: relative;
+    font-weight: 500;
+}
+
+.nav-link.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    background-color: var(--highlight-color);
+    border-radius: 3px 3px 0 0;
+}
+
+/* 卡片基础样式 */
+.card {
+    background-color: white;
+    border-radius: var(--border-radius-base);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all var(--transition-medium);
+    overflow: hidden;
+}
+
+.night-mode .card {
+    background-color: var(--dark-card-bg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #333;
+}
+
+/* 表单元素 */
+.form-control, .btn {
+    border-radius: var(--border-radius-base);
+}
+
+.form-control {
+    padding: 12px 15px;
+    border: 1px solid #E0E0E0;
+    transition: all var(--transition-fast);
+    background-color: white;
+}
+
+.night-mode .form-control {
+    background-color: #333;
+    border-color: #555;
+    color: #E0E0E0;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 96, 122, 0.2);
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: all var(--transition-fast);
+    padding: 0.5rem 1.5rem;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #00506A;
+    border-color: #00506A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 主题切换按钮 */
+.theme-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.night-mode .theme-toggle {
+    background-color: #FFC107;
+}
+
+.theme-toggle i {
+    font-size: 1.25rem;
+    transition: all var(--transition-fast);
+    color: white;
+}
+
+.night-mode .theme-toggle i {
+    color: #121212;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* 辅助功能面板 */
+.accessibility-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.accessibility-indicator:hover {
+    transform: scale(1.1);
+}
+
+.accessibility-panel {
+    position: fixed;
+    bottom: 70px;
+    left: 20px;
+    background-color: white;
+    border-radius: var(--border-radius-base);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    z-index: 1000;
+    width: 250px;
+    display: none;
+}
+
+.night-mode .accessibility-panel {
+    background-color: #1E1E1E;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+}
+
+.font-size-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.font-size-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: var(--border-radius-base);
+    background-color: var(--secondary-color);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.font-size-btn:hover {
+    background-color: var(--highlight-color);
+    color: white;
+}
+
+.night-mode .font-size-btn {
+    background-color: #333;
+    color: #E0E0E0;
+}
+
+.night-mode .font-size-btn:hover {
+    background-color: var(--highlight-color);
+    color: white;
+}
+
+/* 高对比度模式 */
+body.high-contrast {
+    --primary-color: #000000;
+    --secondary-color: #FFFFFF;
+    --highlight-color: #FFD700;
+    --alert-color: #FF0000;
+    --safe-color: #00FF00;
+    --background-color: #000000;
+    --dark-bg-color: #000000;
+    --amber-text: #FFFFFF;
+    --dark-card-bg: #000000;
+    --dark-text: #FFFFFF;
+    color: white;
+    background-color: black;
+    background-image: none;
+}
+
+/* 动画 */
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes message-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 响应式排版调整 */
+@media (max-width: 768px) {
+    :root {
+        --font-size-base: 14px;
+    }
+    
+    .accessibility-indicator,
+    .theme-toggle {
+        width: 36px;
+        height: 36px;
+    }
+} 

@@ -1,0 +1,691 @@
+/* MRI重建系统样式表 - 更新于2025年4月16日 10:35 */
+
+:root {
+    /* 医疗增强型配色系统 */
+    --primary-color: #00607A; /* 深海蓝 - 主色调 - 传递专业感，降低视觉疲劳 */
+    --secondary-color: #E3F2FD; /* 医用蓝白 - 辅助色 - 提升屏幕可读性，减少眩光 */
+    --highlight-color: #00B0FF; /* 荧光蓝 - 高亮色 - 用于3D重建标记，符合DICOM标准 */
+    --alert-color: #D32F2F; /* 凝血红 - 警示区 - 紧急异常区域提示 */
+    --safe-color: #388E3C; /* 叶绿 - 安全区 - 正常指标标识 */
+    --background-color: #FAFAFA; /* 灰白 - 背景色 - 符合医疗显示器校准标准 */
+    --dark-bg-color: #121212; /* OLED黑 - 夜间模式背景 */
+    --amber-text: #FFC107; /* 琥珀色 - 夜间模式文字 */
+    --dark-card-bg: #1E1E1E; /* 深色卡片背景 */
+    --dark-text: #E0E0E0; /* 深色模式文本 */
+
+    /* 字体大小和行高 */
+    --font-size-base: 16px;
+    --line-height-base: 1.5;
+    --border-radius-base: 8px;
+    
+    /* 动画持续时间 */
+    --transition-slow: 0.5s;
+    --transition-medium: 0.3s;
+    --transition-fast: 0.15s;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+    background-color: var(--background-color);
+    background-image: linear-gradient(135deg, rgba(0, 96, 122, 0.03) 0%, rgba(0, 176, 255, 0.05) 100%);
+    margin: 0;
+    padding: 0;
+    line-height: var(--line-height-base);
+    font-size: var(--font-size-base);
+    transition: all var(--transition-medium);
+    min-height: 100vh;
+}
+
+body.night-mode {
+    background-color: var(--dark-bg-color);
+    background-image: none;
+    color: var(--dark-text);
+}
+
+.navbar {
+    background-color: var(--primary-color) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all var(--transition-medium);
+}
+
+.night-mode .navbar {
+    background-color: #002a36 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-brand, .nav-link {
+    color: white !important;
+    transition: all var(--transition-fast);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.nav-link i {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+.navbar-brand:hover, .nav-link:hover {
+    color: var(--secondary-color) !important;
+}
+
+.nav-link.active {
+    position: relative;
+    font-weight: 500;
+}
+
+.nav-link.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    background-color: var(--highlight-color);
+    border-radius: 3px 3px 0 0;
+}
+
+.card {
+    border: none;
+    border-radius: var(--border-radius-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all var(--transition-medium);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    animation: fade-in 0.5s ease-out;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.night-mode .card {
+    background-color: var(--dark-card-bg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #333;
+}
+
+.card-header {
+    border-bottom: none;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-header::before {
+    transform: translateX(0);
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(to right, var(--primary-color), #00779e) !important;
+}
+
+.card-header.bg-success {
+    background: linear-gradient(to right, var(--safe-color), #4caf50) !important;
+}
+
+.card-header.bg-info {
+    background: linear-gradient(to right, var(--highlight-color), #40c4ff) !important;
+}
+
+.card-header.bg-dark {
+    background: linear-gradient(to right, #263238, #455a64) !important;
+}
+
+.card-header.bg-secondary {
+    background: linear-gradient(to right, #455a64, #607d8b) !important;
+}
+
+.night-mode .card-header.bg-primary {
+    background: linear-gradient(to right, #004a60, #00607A) !important;
+}
+
+.night-mode .card-header.bg-success {
+    background: linear-gradient(to right, #2e7d32, #388E3C) !important;
+}
+
+.night-mode .card-header.bg-info {
+    background: linear-gradient(to right, #0091ea, #00B0FF) !important;
+}
+
+.night-mode .card-header.bg-dark {
+    background: linear-gradient(to right, #1a1a1a, #263238) !important;
+}
+
+.night-mode .card-header.bg-secondary {
+    background: linear-gradient(to right, #37474f, #455a64) !important;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.form-control, .form-select {
+    border-radius: var(--border-radius-base);
+    padding: 0.6rem 1rem;
+    border: 1px solid #E0E0E0;
+    transition: all var(--transition-fast);
+}
+
+.night-mode .form-control, .night-mode .form-select {
+    background-color: #333;
+    border-color: #555;
+    color: var(--dark-text);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 96, 122, 0.25);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: var(--border-radius-base);
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.btn-primary:hover::after {
+    transform: translateX(0);
+}
+
+.btn-primary:hover {
+    background-color: #00506A;
+    border-color: #00506A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.progress {
+    height: 0.8rem;
+    border-radius: 1rem;
+    background-color: #E0E0E0;
+    overflow: hidden;
+}
+
+.night-mode .progress {
+    background-color: #333;
+}
+
+.progress-bar {
+    background-color: var(--highlight-color);
+    transition: width 0.3s ease;
+}
+
+.image-comparison-container {
+    display: flex;
+    align-items: stretch;
+}
+
+.image-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.image-container {
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius-base);
+    padding: 1rem;
+    transition: all var(--transition-medium);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.night-mode .image-container {
+    background-color: #2a2a2a;
+}
+
+.image-preview {
+    min-height: 350px;
+    height: 350px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #ccc;
+    border-radius: var(--border-radius-base);
+    overflow: hidden;
+    transition: all var(--transition-medium);
+    position: relative;
+    background-color: #000;
+}
+
+.image-preview p {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border-radius: 4px;
+    z-index: 1;
+}
+
+.night-mode .image-preview p {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.night-mode .image-preview {
+    border-color: #555;
+    background-color: #111;
+}
+
+.metric-card {
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius-base);
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all var(--transition-medium);
+}
+
+.night-mode .metric-card {
+    background-color: #2a2a2a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0.5rem 0;
+}
+
+.night-mode .metric-value {
+    color: var(--highlight-color);
+}
+
+.alert-info {
+    background-color: rgba(0, 176, 255, 0.1);
+    border-color: rgba(0, 176, 255, 0.2);
+    color: var(--highlight-color);
+    border-radius: var(--border-radius-base);
+}
+
+.night-mode .alert-info {
+    background-color: rgba(0, 176, 255, 0.15);
+    border-color: rgba(0, 176, 255, 0.3);
+    color: #40c4ff;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    border-radius: var(--border-radius-base);
+    border: none;
+    overflow: hidden;
+}
+
+.night-mode .modal-content {
+    background-color: var(--dark-card-bg);
+    color: var(--dark-text);
+}
+
+.modal-header {
+    border-bottom: none;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.night-mode .modal-header {
+    background-color: #004a60;
+}
+
+.modal-footer {
+    border-top: none;
+}
+
+.night-mode .modal-footer {
+    background-color: #2a2a2a;
+}
+
+.btn-outline-light:hover {
+    transform: translateY(-2px);
+}
+
+.badge {
+    padding: 0.5rem 0.7rem;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all var(--transition-medium);
+}
+
+/* 辅助功能按钮和面板 */
+.accessibility-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 75px;
+    background-color: #4285f4;
+    color: white;
+    border-radius: 20px;
+    padding: 6px 15px;
+    font-size: 14px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.night-mode .accessibility-indicator {
+    background-color: #2c3e50;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.accessibility-indicator i {
+    margin-right: 5px;
+    font-size: 16px;
+}
+
+.accessibility-indicator:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.accessibility-panel {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    width: 250px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    z-index: 999;
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.night-mode .accessibility-panel {
+    background-color: #2c3e50;
+    color: #f1f1f1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.font-size-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+}
+
+.font-size-btn {
+    background-color: #f1f1f1;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.night-mode .font-size-btn {
+    background-color: #34495e;
+    color: #f1f1f1;
+}
+
+.font-size-btn:hover {
+    background-color: #e3e3e3;
+}
+
+.night-mode .font-size-btn:hover {
+    background-color: #2c3e50;
+}
+
+/* 高对比度模式 */
+body.high-contrast {
+    background-color: #000 !important;
+    color: #fff !important;
+}
+
+body.high-contrast .navbar {
+    background-color: #000 !important;
+    border-bottom: 1px solid #fff !important;
+}
+
+body.high-contrast .card {
+    background-color: #000 !important;
+    border: 1px solid #fff !important;
+}
+
+body.high-contrast h1, 
+body.high-contrast h2, 
+body.high-contrast h3, 
+body.high-contrast h4, 
+body.high-contrast h5, 
+body.high-contrast h6,
+body.high-contrast p,
+body.high-contrast .card-text {
+    color: #fff !important;
+}
+
+body.high-contrast .btn-primary {
+    background-color: #fff !important;
+    color: #000 !important;
+    border-color: #fff !important;
+}
+
+body.high-contrast .bi {
+    color: #fff !important;
+}
+
+/* 响应式样式 */
+@media (max-width: 767.98px) {
+    .image-comparison-container {
+        flex-direction: column;
+    }
+    
+    .image-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    .image-preview {
+        min-height: 300px;
+        height: 300px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .image-preview {
+        min-height: 300px;
+        height: 300px;
+    }
+}
+
+/* 确保图像在预览区域内居中且不变形 */
+.preview-img {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.night-mode .preview-img {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 标题区域样式 - 修订版本 */
+.dashboard-header {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
+    color: var(--primary-color);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 var(--border-radius-base) var(--border-radius-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: all var(--transition-medium);
+}
+
+.dashboard-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+    z-index: 2;
+}
+
+.dashboard-title {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    font-size: 2.75rem;
+    color: var(--primary-color);
+    transition: color var(--transition-medium);
+}
+
+.dashboard-header .lead {
+    margin-bottom: 0;
+    opacity: 0.9;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    transition: color var(--transition-medium);
+}
+
+.dashboard-header .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-color: transparent;
+    transition: all 0.15s;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+}
+
+.dashboard-header .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 夜间模式样式 */
+.night-mode .dashboard-header {
+    background: linear-gradient(135deg, #002a36 0%, var(--dark-bg-color) 100%) !important;
+    color: var(--dark-text) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.night-mode .dashboard-header::before {
+    background: linear-gradient(to right, var(--highlight-color), var(--amber-text));
+}
+
+.night-mode .dashboard-title {
+    color: var(--amber-text);
+}
+
+.night-mode .dashboard-header .lead {
+    color: var(--dark-text);
+}
+
+.night-mode .dashboard-header .btn-outline-primary {
+    color: var(--highlight-color);
+    border-color: var(--highlight-color);
+    background-color: transparent;
+}
+
+.night-mode .dashboard-header .btn-outline-primary:hover {
+    background-color: var(--highlight-color);
+    color: var(--dark-bg-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 确保页面内容布局正确 */
+.container.mt-4 {
+    margin-top: 2rem;
+}
+
+/* 医学分析面板加载样式 */
+.loading {
+    position: relative;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.night-mode .loading::after {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.loading > * {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* 自定义图像上传区域 */
+#customImageAnalysisForm {
+    transition: all 0.3s ease;
+}
+
+#customImageAnalysisForm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

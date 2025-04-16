@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"智绘影"MRI重建系统 - 关于我们</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <!-- 加载主题工具脚本 -->
+    <script src="/static/js/theme-utils.js"></script>
+    <style>
+        /* 继承主页面的渐变背景和标题样式 */
+        .about-header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 var(--border-radius-base) var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+
+        .about-header h1 {
+            color: var(--primary-color);
+            font-weight: 600;
+            animation: fade-in 0.5s ease-out;
+        }
+
+        .about-header .lead {
+            color: #555;
+            animation: fade-in 0.5s ease-out 0.1s forwards;
+        }
+
+        .about-section {
+            background: white;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+
+        .about-section h2 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .technology-card {
+            height: 100%;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all var(--transition-medium);
+            border: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .technology-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+
+        .technology-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .feature-list li {
+            margin-bottom: 0.8rem;
+            color: #555;
+        }
+
+        .contact-info {
+            background: white;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-info::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+
+        .contact-info h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .github-link {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--highlight-color) 100%);
+            border: none;
+            color: white;
+            transition: all var(--transition-medium);
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+        }
+
+        .github-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 夜间模式适配 */
+        .night-mode .about-header {
+            background: linear-gradient(135deg, rgba(0, 96, 122, 0.2) 0%, rgba(30, 30, 30, 0.4) 100%);
+        }
+
+        .night-mode .about-section,
+        .night-mode .technology-card,
+        .night-mode .contact-info {
+            background-color: var(--dark-card-bg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .night-mode .about-header h1,
+        .night-mode .about-section h2,
+        .night-mode .card-title,
+        .night-mode .contact-info h3 {
+            color: var(--amber-text);
+        }
+
+        .night-mode .feature-list li,
+        .night-mode .about-header .lead {
+            color: #BBB;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-hospital me-2"></i> "智绘影"MRI重建系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image"></i> MRI重建</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/medical-qa"><i class="bi bi-chat-dots"></i> 智能问诊</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up"></i> 数据看板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i> 设置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/about"><i class="bi bi-info-circle"></i> 关于我们</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/my-feedback"><i class="bi bi-chat-square-text"></i> 我的反馈</a>
+                    </li>
+                    <li class="nav-item" id="adminLink" style="display: none;">
+                        <a class="nav-link" href="/admin"><i class="bi bi-shield-lock"></i> 管理控制台</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right me-1"></i>退出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="about-header mb-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h1 class="display-4">关于"智绘影"</h1>
+                    <p class="lead">基于隐式神经表示（INR）的二维MRI图像重建系统</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <!-- 系统简介 -->
+        <div class="row mb-5">
+            <div class="col-md-10 mx-auto">
+                <div class="about-section p-4">
+                    <h2 class="mb-4"><i class="bi bi-info-circle me-2"></i>系统简介</h2>
+                    <p>"智绘影"MRI重建系统是一个专为医学影像处理设计的平台，利用先进的深度学习技术对MRI图像进行重建和分析。系统旨在提高MRI采集效率，减少采集时间，同时保证重建图像的质量。</p>
+                    <p>本系统核心是基于隐式神经表示（Implicit Neural Representation，INR）的深度学习模型，能够从欠采样的MRI数据快速重建高质量图像，同时提供医学分析功能，帮助医生更好地进行诊断。</p>
+                    <p>系统具有高精度重建（PSNR > 30dB，SSIM > 0.9）、实时处理（单张图像处理时间 < 1s）、可扩展架构、安全可靠和易于部署等特点。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统主要功能 -->
+        <div class="row mb-5">
+            <div class="col-md-10 mx-auto">
+                <h2 class="mb-4"><i class="bi bi-list-check me-2"></i>系统主要功能</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3 class="card-title"><i class="bi bi-image card-icon d-block text-primary"></i>MRI图像重建</h3>
+                                <ul class="feature-list">
+                                    <li>支持不同重建模型的选择</li>
+                                    <li>实时显示重建进度</li>
+                                    <li>计算PSNR、SSIM等客观指标</li>
+                                    <li>保存重建历史记录</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3 class="card-title"><i class="bi bi-clipboard2-pulse card-icon d-block text-danger"></i>医学图像分析</h3>
+                                <ul class="feature-list">
+                                    <li>脑体积异常检测：针对神经退行性疾病</li>
+                                    <li>病灶检测：识别肿瘤/多发性硬化斑块等</li>
+                                    <li>运动伪影检测：评估图像质量</li>
+                                    <li>三维可视化：展示脑部结构和病灶位置</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3 class="card-title"><i class="bi bi-robot card-icon d-block text-success"></i>医疗专家问答</h3>
+                                <ul class="feature-list">
+                                    <li>基于Ollama本地部署的医疗专业大模型</li>
+                                    <li>实时问答交互界面</li>
+                                    <li>支持医疗咨询、诊断建议等功能</li>
+                                    <li>支持语音输入和语音朗读，提供自然交流体验</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3 class="card-title"><i class="bi bi-graph-up card-icon d-block text-info"></i>数据看板</h3>
+                                <ul class="feature-list">
+                                    <li>系统使用统计数据可视化</li>
+                                    <li>模型性能评估和比较</li>
+                                    <li>重建任务历史记录查询</li>
+                                    <li>用户活动监控与分析</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技术栈 -->
+        <div class="row mb-5">
+            <div class="col-md-10 mx-auto">
+                <h2 class="mb-4"><i class="bi bi-stack me-2"></i>技术栈</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3>后端技术</h3>
+                                <ul>
+                                    <li><strong>框架</strong>: FastAPI - 异步支持、自动API文档、高性能路由</li>
+                                    <li><strong>深度学习</strong>: PyTorch - 自定义模型支持、GPU加速、模型导出</li>
+                                    <li><strong>数据库</strong>: SQLAlchemy + PostgreSQL - 关系型数据存储、事务支持、数据迁移</li>
+                                    <li><strong>图像处理</strong>: Pillow, NumPy - 图像格式转换、数据预处理、结果后处理</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3>前端技术</h3>
+                                <ul>
+                                    <li><strong>UI框架</strong>: Bootstrap 5 - 响应式设计、主题定制、组件库</li>
+                                    <li><strong>实时通信</strong>: WebSocket - 实时数据更新、双向通信、断线重连</li>
+                                    <li><strong>图表</strong>: Chart.js - 数据可视化、实时更新、交互式图表</li>
+                                    <li><strong>交互</strong>: jQuery - DOM操作、事件处理、AJAX请求</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3>医学图像处理工具</h3>
+                                <ul>
+                                    <li><strong>ANTsPy</strong>: 高级神经影像工具</li>
+                                    <li><strong>SimpleITK</strong>: 简化的影像工具包</li>
+                                    <li><strong>MONAI</strong>: 医疗AI框架</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 technology-card">
+                            <div class="card-body">
+                                <h3>系统平台</h3>
+                                <ul>
+                                    <li><strong>容器化</strong>: Docker - 环境隔离、快速部署、横向扩展</li>
+                                    <li><strong>Web服务器</strong>: Nginx - 反向代理、负载均衡、静态资源服务</li>
+                                    <li><strong>进程管理</strong>: Gunicorn - 多工作进程、优雅重启、监控接口</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我们的联系方式 -->
+        <div class="row mb-5">
+            <div class="col-md-10 mx-auto">
+                <h2 class="mb-4"><i class="bi bi-envelope me-2"></i>联系我们</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="contact-info p-4">
+                            <h3 class="mb-3">项目维护者</h3>
+                            <p class="text-break mb-4">王金洋 吴志宏 刘韬 普昊冕</p>
+                            
+                            <h4 class="mt-4 mb-3">电子邮件</h4>
+                            <p class="text-break mb-4">
+                                <i class="bi bi-envelope-fill me-2"></i>
+                                <a href="mailto:swuwjy08@email.swu.edu.cn" class="text-decoration-none">swuwjy08@email.swu.edu.cn</a>
+                            </p>
+                            
+                            <h4 class="mt-4 mb-3">问题反馈</h4>
+                            <p class="text-break mb-4">
+                                <i class="bi bi-bug-fill me-2"></i>
+                                <a href="mailto:swuwjy08@email.swu.edu.cn" class="text-decoration-none">swuwjy08@email.swu.edu.cn</a>
+                            </p>
+                            
+                            <!-- 添加反馈按钮 -->
+                            <button type="button" class="btn btn-primary mt-2" id="feedbackBtn" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                <i class="bi bi-chat-right-text me-2"></i>提交反馈
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="contact-info p-4">
+                            <h3 class="mb-3">项目资源</h3>
+                            <div class="mb-4">
+                                <p class="mb-3">
+                                    <i class="bi bi-github me-2"></i>
+                                    <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="btn github-link">
+                                        访问GitHub仓库
+                                    </a>
+                                </p>
+                                <p class="mb-3">
+                                    <i class="bi bi-file-earmark-text me-2"></i>
+                                    <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="text-decoration-none">文档地址</a>
+                                </p>
+                                <p class="mb-3">
+                                    <i class="bi bi-play-btn me-2"></i>
+                                    <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="text-decoration-none">演示地址</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 "智绘影"MRI重建系统. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <!-- 反馈Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feedbackModalLabel">提交反馈</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="feedbackForm">
+                        <div class="mb-3">
+                            <label for="feedbackTitle" class="form-label">标题</label>
+                            <input type="text" class="form-control" id="feedbackTitle" placeholder="请输入反馈标题" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="feedbackContent" class="form-label">内容</label>
+                            <textarea class="form-control" id="feedbackContent" rows="5" placeholder="请详细描述您的问题或建议..." required></textarea>
+                        </div>
+                    </form>
+                    <div id="feedbackMessage" class="alert" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitFeedback">
+                        <span id="feedbackSubmitText">提交</span>
+                        <span id="feedbackLoading" class="spinner-border spinner-border-sm ms-1" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+
+    <!-- 添加反馈处理脚本 -->
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 获取反馈表单元素
+            const feedbackForm = document.getElementById('feedbackForm');
+            const submitButton = document.getElementById('submitFeedback');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackContent = document.getElementById('feedbackContent');
+            const messageDiv = document.getElementById('feedbackMessage');
+            const submitText = document.getElementById('feedbackSubmitText');
+            const loadingSpinner = document.getElementById('feedbackLoading');
+            const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+            
+            // 检查用户是否登录
+            const token = localStorage.getItem('access_token');
+            const feedbackBtn = document.getElementById('feedbackBtn');
+            
+            if (!token) {
+                // 未登录用户，点击反馈按钮时跳转到登录页面
+                feedbackBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.setItem('redirect_after_login', '/about');
+                    window.location.href = '/login';
+                });
+            } else {
+                // 提交反馈
+                submitButton.addEventListener('click', async () => {
+                    // 表单验证
+                    if (!feedbackTitle.value.trim() || !feedbackContent.value.trim()) {
+                        messageDiv.textContent = '请填写完整的反馈信息';
+                        messageDiv.className = 'alert alert-danger';
+                        messageDiv.style.display = 'block';
+                        return;
+                    }
+                    
+                    // 显示加载状态
+                    submitButton.disabled = true;
+                    submitText.textContent = '提交中...';
+                    loadingSpinner.style.display = 'inline-block';
+                    messageDiv.style.display = 'none';
+                    
+                    try {
+                        const response = await fetch('/api/feedback/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                            },
+                            body: JSON.stringify({
+                                title: feedbackTitle.value,
+                                content: feedbackContent.value
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            // 提交成功
+                            messageDiv.textContent = '感谢您的反馈！我们会尽快处理。';
+                            messageDiv.className = 'alert alert-success';
+                            
+                            // 清空表单
+                            feedbackTitle.value = '';
+                            feedbackContent.value = '';
+                            
+                            // 3秒后关闭弹窗
+                            setTimeout(() => {
+                                modal.hide();
+                            }, 3000);
+                        } else {
+                            // 提交失败
+                            const errorData = await response.json();
+                            messageDiv.textContent = errorData.detail || '提交失败，请稍后再试';
+                            messageDiv.className = 'alert alert-danger';
+                        }
+                    } catch (error) {
+                        console.error('提交反馈出错:', error);
+                        messageDiv.textContent = '网络错误，请检查您的连接';
+                        messageDiv.className = 'alert alert-danger';
+                    } finally {
+                        // 恢复按钮状态
+                        submitButton.disabled = false;
+                        submitText.textContent = '提交';
+                        loadingSpinner.style.display = 'none';
+                        messageDiv.style.display = 'block';
+                    }
+                });
+            }
+            
+            // 显示管理员入口
+            const adminLink = document.getElementById('adminLink');
+            if (adminLink && localStorage.getItem('user_role') === 'admin') {
+                adminLink.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html> 
