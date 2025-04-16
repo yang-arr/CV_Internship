@@ -1,0 +1,629 @@
+/* 在线训练页面样式 - MRI重建系统 */
+
+:root {
+    /* 医疗增强型配色系统 */
+    --primary-color: #00607A; /* 深海蓝 - 主色调 - 传递专业感，降低视觉疲劳 */
+    --secondary-color: #E3F2FD; /* 医用蓝白 - 辅助色 - 提升屏幕可读性，减少眩光 */
+    --highlight-color: #00B0FF; /* 荧光蓝 - 高亮色 - 用于3D重建标记，符合DICOM标准 */
+    --alert-color: #D32F2F; /* 凝血红 - 警示区 - 紧急异常区域提示 */
+    --safe-color: #388E3C; /* 叶绿 - 安全区 - 正常指标标识 */
+    --background-color: #FAFAFA; /* 灰白 - 背景色 - 符合医疗显示器校准标准 */
+    --dark-bg-color: #121212; /* OLED黑 - 夜间模式背景 */
+    --amber-text: #FFC107; /* 琥珀色 - 夜间模式文字 */
+    --dark-card-bg: #1E1E1E; /* 深色卡片背景 */
+    --dark-text: #E0E0E0; /* 深色模式文本 */
+    --card-hover-transform: translateY(-8px);
+
+    /* 字体大小和行高 */
+    --font-size-base: 16px;
+    --line-height-base: 1.5;
+    --border-radius-base: 8px;
+    
+    /* 动画持续时间 */
+    --transition-slow: 0.5s;
+    --transition-medium: 0.3s;
+    --transition-fast: 0.15s;
+}
+
+/* 页面基础样式 */
+body {
+    font-family: "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+    background-color: var(--background-color);
+    background-image: linear-gradient(135deg, rgba(0, 96, 122, 0.03) 0%, rgba(0, 176, 255, 0.05) 100%);
+    margin: 0;
+    padding: 0;
+    line-height: var(--line-height-base);
+    font-size: var(--font-size-base);
+    transition: all var(--transition-medium);
+    min-height: 100vh;
+}
+
+body.night-mode {
+    background-color: var(--dark-bg-color);
+    background-image: none;
+    color: var(--dark-text);
+}
+
+/* 导航栏样式 */
+.navbar {
+    background-color: var(--primary-color) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all var(--transition-medium);
+}
+
+.night-mode .navbar {
+    background-color: #002a36 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-brand, .nav-link {
+    color: white !important;
+    transition: all var(--transition-fast);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link i {
+    margin-right: 0.25rem;
+    font-size: 1rem;
+}
+
+.navbar-brand:hover, .nav-link:hover {
+    color: var(--secondary-color) !important;
+}
+
+.nav-link.active {
+    position: relative;
+    font-weight: 500;
+}
+
+.nav-link.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    background-color: var(--highlight-color);
+    border-radius: 3px 3px 0 0;
+}
+
+/* 页面标题区域样式 */
+.welcome-section {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 var(--border-radius-base) var(--border-radius-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all var(--transition-medium);
+    position: relative;
+    overflow: hidden;
+}
+
+.night-mode .welcome-section {
+    background: linear-gradient(135deg, rgba(0, 96, 122, 0.2) 0%, rgba(30, 30, 30, 0.4) 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.welcome-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+}
+
+.welcome-section h1 {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.night-mode .welcome-section h1 {
+    color: var(--amber-text);
+}
+
+.welcome-section p {
+    color: #555;
+    max-width: 800px;
+}
+
+.night-mode .welcome-section p {
+    color: #BBB;
+}
+
+/* 卡片样式 - 与首页风格一致 */
+.card {
+    background-color: white;
+    border-radius: var(--border-radius-base);
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all var(--transition-medium);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+}
+
+.night-mode .card {
+    background-color: var(--dark-card-bg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #333;
+}
+
+.card-header {
+    border-bottom: none;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: var(--card-hover-transform);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.card-header i {
+    margin-right: 0.5rem;
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(to right, var(--primary-color), #00779e) !important;
+}
+
+.card-header.bg-success {
+    background: linear-gradient(to right, var(--safe-color), #4caf50) !important;
+}
+
+.card-header.bg-info {
+    background: linear-gradient(to right, #0288d1, var(--highlight-color)) !important;
+}
+
+.night-mode .card-header.bg-primary {
+    background: linear-gradient(to right, #004a60, #00607A) !important;
+}
+
+.night-mode .card-header.bg-success {
+    background: linear-gradient(to right, #2e7d32, #388E3C) !important;
+}
+
+.night-mode .card-header.bg-info {
+    background: linear-gradient(to right, #01579b, #0288d1) !important;
+}
+
+/* 表单控件样式 */
+.form-control, .form-select {
+    border-radius: var(--border-radius-base);
+    padding: 0.6rem 1rem;
+    border: 1px solid #E0E0E0;
+    transition: all var(--transition-fast);
+}
+
+.night-mode .form-control, .night-mode .form-select {
+    background-color: #333;
+    border-color: #555;
+    color: var(--dark-text);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 96, 122, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.night-mode .form-label {
+    color: var(--highlight-color);
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: all var(--transition-fast);
+    border-radius: 20px;
+    padding: 0.6rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.btn-primary:hover::after {
+    transform: translateX(0);
+}
+
+.btn-primary:hover {
+    background-color: #004a60;
+    border-color: #004a60;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-info {
+    background-color: var(--highlight-color);
+    border-color: var(--highlight-color);
+    transition: all var(--transition-fast);
+    border-radius: 20px;
+    padding: 0.6rem 1.5rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-info::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.btn-info:hover::after {
+    transform: translateX(0);
+}
+
+.btn-info:hover {
+    background-color: #0091ea;
+    border-color: #0091ea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    color: white;
+}
+
+/* 进度条样式 */
+.training-progress {
+    height: 25px;
+    border-radius: 20px;
+    margin: 15px 0;
+    background-color: var(--secondary-color);
+    overflow: hidden;
+}
+
+.night-mode .training-progress {
+    background-color: #2a2a2a;
+}
+
+.progress-bar {
+    background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+    transition: width 0.3s ease;
+}
+
+/* 指标卡片样式 */
+.metrics-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.metric-card {
+    background-color: var(--secondary-color);
+    padding: 15px;
+    border-radius: var(--border-radius-base);
+    text-align: center;
+    transition: all var(--transition-medium);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card h6 {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.night-mode .metric-card {
+    background-color: #2a2a2a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.night-mode .metric-card h6 {
+    color: var(--highlight-color);
+}
+
+/* 日志容器样式 */
+.log-container {
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius-base);
+    padding: 15px;
+    margin-top: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 14px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.night-mode .log-container {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    border-left-color: var(--highlight-color);
+}
+
+/* 图表容器样式 */
+.chart-container {
+    margin-top: 20px;
+    height: 300px;
+    transition: all var(--transition-medium);
+}
+
+/* 加载遮罩样式 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-overlay.d-none {
+    display: none;
+}
+
+/* 高级选项样式 */
+#advanced-options {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius-base);
+    margin-bottom: 15px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.night-mode #advanced-options {
+    background-color: #2a2a2a;
+    border-left-color: var(--highlight-color);
+}
+
+#advanced-options h6 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.night-mode #advanced-options h6 {
+    color: var(--highlight-color);
+}
+
+/* 动画效果 */
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 动画淡入效果类 */
+.animate-fade-in {
+    animation: fade-in 0.8s ease-out;
+}
+
+.animate-fade-in-delay-1 {
+    animation: fade-in 0.8s ease-out 0.1s forwards;
+    opacity: 0;
+}
+
+.animate-fade-in-delay-2 {
+    animation: fade-in 0.8s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+.animate-fade-in-delay-3 {
+    animation: fade-in 0.8s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+/* 提示和警告框样式 */
+.alert-info {
+    background-color: rgba(0, 176, 255, 0.1);
+    border-color: rgba(0, 176, 255, 0.3);
+    color: var(--primary-color);
+    border-radius: var(--border-radius-base);
+}
+
+.night-mode .alert-info {
+    background-color: rgba(0, 176, 255, 0.15);
+    border-color: rgba(0, 176, 255, 0.3);
+    color: var(--highlight-color);
+}
+
+.alert-success {
+    background-color: rgba(56, 142, 60, 0.1);
+    border-color: rgba(56, 142, 60, 0.3);
+    color: var(--safe-color);
+    border-radius: var(--border-radius-base);
+}
+
+.night-mode .alert-success {
+    background-color: rgba(56, 142, 60, 0.15);
+    border-color: rgba(56, 142, 60, 0.3);
+    color: #4CAF50;
+}
+
+.alert-danger {
+    background-color: rgba(211, 47, 47, 0.1);
+    border-color: rgba(211, 47, 47, 0.3);
+    color: var(--alert-color);
+    border-radius: var(--border-radius-base);
+}
+
+.night-mode .alert-danger {
+    background-color: rgba(211, 47, 47, 0.15);
+    border-color: rgba(211, 47, 47, 0.3);
+    color: #f44336;
+}
+
+/* 空状态提示样式 */
+#training-empty-state {
+    padding: 2rem;
+    transition: all var(--transition-medium);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#training-empty-state i {
+    font-size: 3.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.night-mode #training-empty-state i {
+    color: #2a2a2a;
+}
+
+#training-empty-state h4 {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.night-mode #training-empty-state h4 {
+    color: var(--highlight-color);
+}
+
+/* 响应式调整 */
+@media (max-width: 767.98px) {
+    .metrics-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .welcome-section {
+        padding: 2rem 0;
+    }
+}
+
+/* 训练操作按钮区域样式 */
+.training-actions {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+    gap: 10px;
+}
+
+.btn-danger {
+    background-color: var(--alert-color);
+    border-color: var(--alert-color);
+    transition: all var(--transition-fast);
+    border-radius: 20px;
+    padding: 0.6rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-danger::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.btn-danger:hover::after {
+    transform: translateX(0);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background-color: #b71c1c;
+    border-color: #b71c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-success {
+    background-color: var(--safe-color);
+    border-color: var(--safe-color);
+    transition: all var(--transition-fast);
+    border-radius: 20px;
+    padding: 0.6rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-success::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.btn-success:hover::after {
+    transform: translateX(0);
+}
+
+.btn-success:hover:not(:disabled) {
+    background-color: #2e7d32;
+    border-color: #2e7d32;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 禁用按钮样式 */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.night-mode .btn-danger {
+    background-color: #c62828;
+    border-color: #c62828;
+}
+
+.night-mode .btn-success {
+    background-color: #2e7d32;
+    border-color: #2e7d32;
+}

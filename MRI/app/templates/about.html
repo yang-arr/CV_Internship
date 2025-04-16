@@ -169,6 +169,133 @@
         .night-mode .about-header .lead {
             color: #BBB;
         }
+
+        .tech-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .tech-list li {
+            line-height: 1.6;
+        }
+        
+        .tech-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        
+        .tech-desc {
+            color: #555;
+        }
+        
+        .night-mode .tech-title {
+            color: var(--amber-text);
+        }
+        
+        .night-mode .tech-desc {
+            color: #BBB;
+        }
+        
+        .high-contrast .tech-title,
+        .high-contrast .tech-desc {
+            color: #fff !important;
+        }
+
+        .contact-card {
+            background: white;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all var(--transition-medium);
+            border: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .contact-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            font-size: 1.1em;
+        }
+
+        .contact-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all var(--transition-fast);
+        }
+
+        .contact-link:hover {
+            color: var(--highlight-color);
+            transform: translateX(5px);
+        }
+
+        .resource-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--highlight-color) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            transition: all var(--transition-medium);
+            margin-bottom: 1rem;
+        }
+
+        .resource-link:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .resource-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* 夜间模式适配 */
+        .night-mode .contact-card {
+            background-color: var(--dark-card-bg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .night-mode .section-title {
+            color: var(--amber-text);
+        }
+
+        .night-mode .contact-link {
+            color: var(--amber-text);
+        }
+
+        .night-mode .contact-link:hover {
+            color: var(--highlight-color);
+        }
+
+        /* 高对比度模式 */
+        .high-contrast .section-title,
+        .high-contrast .contact-link {
+            color: #fff !important;
+        }
     </style>
 </head>
 <body>
@@ -308,26 +435,50 @@
                 <div class="row">
                     <div class="col-md-6 mb-4">
                         <div class="card h-100 technology-card">
-                            <div class="card-body">
-                                <h3>后端技术</h3>
-                                <ul>
-                                    <li><strong>框架</strong>: FastAPI - 异步支持、自动API文档、高性能路由</li>
-                                    <li><strong>深度学习</strong>: PyTorch - 自定义模型支持、GPU加速、模型导出</li>
-                                    <li><strong>数据库</strong>: SQLAlchemy + PostgreSQL - 关系型数据存储、事务支持、数据迁移</li>
-                                    <li><strong>图像处理</strong>: Pillow, NumPy - 图像格式转换、数据预处理、结果后处理</li>
+                            <div class="card-body p-4">
+                                <h3 class="card-title mb-4">后端技术</h3>
+                                <ul class="tech-list">
+                                    <li class="mb-3">
+                                        <strong class="tech-title">框架</strong>: 
+                                        <span class="tech-desc">FastAPI - 异步支持、自动API文档、高性能路由</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">深度学习</strong>: 
+                                        <span class="tech-desc">PyTorch - 自定义模型支持、GPU加速、模型导出</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">数据库</strong>: 
+                                        <span class="tech-desc">SQLAlchemy + PostgreSQL - 关系型数据存储、事务支持、数据迁移</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">图像处理</strong>: 
+                                        <span class="tech-desc">Pillow, NumPy - 图像格式转换、数据预处理、结果后处理</span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-4">
                         <div class="card h-100 technology-card">
-                            <div class="card-body">
-                                <h3>前端技术</h3>
-                                <ul>
-                                    <li><strong>UI框架</strong>: Bootstrap 5 - 响应式设计、主题定制、组件库</li>
-                                    <li><strong>实时通信</strong>: WebSocket - 实时数据更新、双向通信、断线重连</li>
-                                    <li><strong>图表</strong>: Chart.js - 数据可视化、实时更新、交互式图表</li>
-                                    <li><strong>交互</strong>: jQuery - DOM操作、事件处理、AJAX请求</li>
+                            <div class="card-body p-4">
+                                <h3 class="card-title mb-4">前端技术</h3>
+                                <ul class="tech-list">
+                                    <li class="mb-3">
+                                        <strong class="tech-title">UI框架</strong>: 
+                                        <span class="tech-desc">Bootstrap 5 - 响应式设计、主题定制、组件库</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">实时通信</strong>: 
+                                        <span class="tech-desc">WebSocket - 实时数据更新、双向通信、断线重连</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">图表</strong>: 
+                                        <span class="tech-desc">Chart.js - 数据可视化、实时更新、交互式图表</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">交互</strong>: 
+                                        <span class="tech-desc">jQuery - DOM操作、事件处理、AJAX请求</span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -336,24 +487,42 @@
                 <div class="row">
                     <div class="col-md-6 mb-4">
                         <div class="card h-100 technology-card">
-                            <div class="card-body">
-                                <h3>医学图像处理工具</h3>
-                                <ul>
-                                    <li><strong>ANTsPy</strong>: 高级神经影像工具</li>
-                                    <li><strong>SimpleITK</strong>: 简化的影像工具包</li>
-                                    <li><strong>MONAI</strong>: 医疗AI框架</li>
+                            <div class="card-body p-4">
+                                <h3 class="card-title mb-4">医学图像处理工具</h3>
+                                <ul class="tech-list">
+                                    <li class="mb-3">
+                                        <strong class="tech-title">ANTsPy</strong>: 
+                                        <span class="tech-desc">高级神经影像工具</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">SimpleITK</strong>: 
+                                        <span class="tech-desc">简化的影像工具包</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">MONAI</strong>: 
+                                        <span class="tech-desc">医疗AI框架</span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-4">
                         <div class="card h-100 technology-card">
-                            <div class="card-body">
-                                <h3>系统平台</h3>
-                                <ul>
-                                    <li><strong>容器化</strong>: Docker - 环境隔离、快速部署、横向扩展</li>
-                                    <li><strong>Web服务器</strong>: Nginx - 反向代理、负载均衡、静态资源服务</li>
-                                    <li><strong>进程管理</strong>: Gunicorn - 多工作进程、优雅重启、监控接口</li>
+                            <div class="card-body p-4">
+                                <h3 class="card-title mb-4">系统平台</h3>
+                                <ul class="tech-list">
+                                    <li class="mb-3">
+                                        <strong class="tech-title">容器化</strong>: 
+                                        <span class="tech-desc">Docker - 环境隔离、快速部署、横向扩展</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">Web服务器</strong>: 
+                                        <span class="tech-desc">Nginx - 反向代理、负载均衡、静态资源服务</span>
+                                    </li>
+                                    <li class="mb-3">
+                                        <strong class="tech-title">进程管理</strong>: 
+                                        <span class="tech-desc">Gunicorn - 多工作进程、优雅重启、监控接口</span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -368,46 +537,61 @@
                 <h2 class="mb-4"><i class="bi bi-envelope me-2"></i>联系我们</h2>
                 <div class="row">
                     <div class="col-md-6 mb-4">
-                        <div class="contact-info p-4">
-                            <h3 class="mb-3">项目维护者</h3>
-                            <p class="text-break mb-4">王金洋 吴志宏 刘韬 普昊冕</p>
-                            
-                            <h4 class="mt-4 mb-3">电子邮件</h4>
-                            <p class="text-break mb-4">
-                                <i class="bi bi-envelope-fill me-2"></i>
-                                <a href="mailto:swuwjy08@email.swu.edu.cn" class="text-decoration-none">swuwjy08@email.swu.edu.cn</a>
-                            </p>
-                            
-                            <h4 class="mt-4 mb-3">问题反馈</h4>
-                            <p class="text-break mb-4">
-                                <i class="bi bi-bug-fill me-2"></i>
-                                <a href="mailto:swuwjy08@email.swu.edu.cn" class="text-decoration-none">swuwjy08@email.swu.edu.cn</a>
-                            </p>
-                            
-                            <!-- 添加反馈按钮 -->
-                            <button type="button" class="btn btn-primary mt-2" id="feedbackBtn" data-bs-toggle="modal" data-bs-target="#feedbackModal">
-                                <i class="bi bi-chat-right-text me-2"></i>提交反馈
-                            </button>
+                        <div class="contact-card h-100">
+                            <div class="card-body p-4">
+                                <div class="contact-section mb-4">
+                                    <h3 class="section-title">
+                                        <i class="bi bi-people-fill me-2"></i>项目维护者
+                                    </h3>
+                                    <p class="text-break mb-0">王金洋 吴志宏 刘韬 普昊冕</p>
+                                </div>
+                                
+                                <div class="contact-section mb-4">
+                                    <h3 class="section-title">
+                                        <i class="bi bi-envelope-fill me-2"></i>电子邮件
+                                    </h3>
+                                    <a href="mailto:swuwjy08@email.swu.edu.cn" class="contact-link">
+                                        swuwjy08@email.swu.edu.cn
+                                    </a>
+                                </div>
+                                
+                                <div class="contact-section mb-4">
+                                    <h3 class="section-title">
+                                        <i class="bi bi-bug-fill me-2"></i>问题反馈
+                                    </h3>
+                                    <a href="mailto:swuwjy08@email.swu.edu.cn" class="contact-link">
+                                        swuwjy08@email.swu.edu.cn
+                                    </a>
+                                </div>
+                                
+                                <!-- 添加反馈按钮 -->
+                                <button type="button" class="btn btn-primary w-100" id="feedbackBtn" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                    <i class="bi bi-chat-right-text me-2"></i>提交反馈
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-4">
-                        <div class="contact-info p-4">
-                            <h3 class="mb-3">项目资源</h3>
-                            <div class="mb-4">
-                                <p class="mb-3">
-                                    <i class="bi bi-github me-2"></i>
-                                    <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="btn github-link">
-                                        访问GitHub仓库
-                                    </a>
-                                </p>
-                                <p class="mb-3">
-                                    <i class="bi bi-file-earmark-text me-2"></i>
-                                    <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="text-decoration-none">文档地址</a>
-                                </p>
-                                <p class="mb-3">
-                                    <i class="bi bi-play-btn me-2"></i>
-                                    <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="text-decoration-none">演示地址</a>
-                                </p>
+                        <div class="contact-card h-100">
+                            <div class="card-body p-4">
+                                <div class="contact-section">
+                                    <h3 class="section-title">
+                                        <i class="bi bi-folder-fill me-2"></i>项目资源
+                                    </h3>
+                                    <div class="resource-links">
+                                        <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="resource-link mb-3">
+                                            <i class="bi bi-github me-2"></i>访问GitHub仓库
+                                        </a>
+                                        
+                                        <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="contact-link d-block mb-3">
+                                            <i class="bi bi-file-earmark-text me-2"></i>文档地址
+                                        </a>
+                                        
+                                        <a href="https://github.com/yang-arr/CV_Internship" target="_blank" class="contact-link d-block">
+                                            <i class="bi bi-play-btn me-2"></i>演示地址
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -418,7 +602,7 @@
 
     <footer class="py-4 mt-5">
         <div class="container text-center">
-            <p class="mb-0">© 2024 "智绘影"MRI重建系统. 保留所有权利.</p>
+            <p class="mb-0">© 2025 "智绘影"MRI重建系统. 保留所有权利.</p>
         </div>
     </footer>
 

@@ -135,6 +135,12 @@ async def medical_qa_page(request: Request):
     """渲染医疗问答页面"""
     return templates.TemplateResponse("medical_qa.html", {"request": request})
 
+# 在线训练页面路由
+@app.get("/online-training")
+async def online_training_page(request: Request):
+    """渲染在线训练页面"""
+    return templates.TemplateResponse("online_training.html", {"request": request})
+
 # 数据看板页面路由
 @app.get("/data-dashboard")
 async def data_dashboard_page(request: Request, current_user: User = Depends(get_current_user)):

@@ -10,56 +10,217 @@
     <!-- 加载主题工具脚本 -->
     <script src="/static/js/theme-utils.js"></script>
     <style>
+        /* 页面标题区域 */
+        .feedback-header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 var(--border-radius-base) var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feedback-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+
+        .feedback-header h1 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            animation: fade-in 0.5s ease-out;
+        }
+
+        .feedback-header p {
+            color: #555;
+            animation: fade-in 0.5s ease-out 0.1s forwards;
+        }
+
+        /* 反馈卡片样式 */
         .feedback-card {
-            margin-bottom: 20px;
-            transition: transform 0.2s;
-            border-left: 4px solid #007bff;
+            background: white;
+            border-radius: var(--border-radius-base);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all var(--transition-medium);
+            border: none;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 1.5rem;
         }
+
+        .feedback-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+        }
+
         .feedback-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
-        .feedback-status {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        .status-pending {
-            background-color: #f8f9fa;
-            color: #6c757d;
-        }
-        .status-processing {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .status-resolved {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .reply-section {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            border-left: 3px solid #28a745;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            margin-top: 2rem;
-        }
-        .empty-state i {
-            font-size: 4rem;
-            color: #6c757d;
+
+        .feedback-card .card-title {
+            color: var(--primary-color);
+            font-weight: 600;
             margin-bottom: 1rem;
         }
+
+        /* 状态标签样式 */
+        .feedback-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .status-pending {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .status-processing {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+            color: #fff;
+        }
+
+        .status-resolved {
+            background: linear-gradient(135deg, var(--safe-color) 0%, #4CAF50 100%);
+            color: #fff;
+        }
+
+        /* 回复区域样式 */
+        .reply-section {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #fff 100%);
+            border-radius: var(--border-radius-base);
+            position: relative;
+        }
+
+        .reply-section h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #fff 100%);
+            border-radius: var(--border-radius-base);
+            margin-top: 2rem;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .empty-state h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* 时间戳样式 */
         .feedback-timestamp {
-            font-size: 0.85rem;
+            font-size: 0.875rem;
             color: #6c757d;
+            margin-top: 1rem;
+        }
+
+        /* 按钮样式 */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--highlight-color) 100%);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            transition: all var(--transition-medium);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Modal样式 */
+        .modal-content {
+            border-radius: var(--border-radius-base);
+            border: none;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--highlight-color) 100%);
+            color: white;
+            border: none;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        /* 夜间模式适配 */
+        .night-mode .feedback-header {
+            background: linear-gradient(135deg, rgba(0, 96, 122, 0.2) 0%, rgba(30, 30, 30, 0.4) 100%);
+        }
+
+        .night-mode .feedback-card {
+            background-color: var(--dark-card-bg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .night-mode .feedback-card .card-title,
+        .night-mode .feedback-header h1,
+        .night-mode .reply-section h6 {
+            color: var(--amber-text);
+        }
+
+        .night-mode .feedback-header p,
+        .night-mode .card-text {
+            color: #BBB;
+        }
+
+        .night-mode .reply-section {
+            background: linear-gradient(135deg, rgba(0, 96, 122, 0.1) 0%, rgba(30, 30, 30, 0.2) 100%);
+        }
+
+        .night-mode .empty-state {
+            background: linear-gradient(135deg, rgba(0, 96, 122, 0.1) 0%, rgba(30, 30, 30, 0.2) 100%);
+        }
+
+        .night-mode .empty-state i {
+            color: var(--amber-text);
         }
     </style>
 </head>
@@ -108,19 +269,22 @@
         </div>
     </nav>
 
-    <div class="container my-5">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+    <!-- 页面标题区域 -->
+    <div class="feedback-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
                     <h1><i class="bi bi-chat-left-text me-2"></i>我的反馈</h1>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
-                        <i class="bi bi-plus-circle me-2"></i>新建反馈
-                    </button>
+                    <p class="text-muted mb-0">查看您提交的反馈和系统管理员的回复</p>
                 </div>
-                <p class="text-muted">查看您提交的反馈和系统管理员的回复</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
+                    <i class="bi bi-plus-circle me-2"></i>新建反馈
+                </button>
             </div>
         </div>
+    </div>
 
+    <div class="container">
         <!-- 反馈列表 -->
         <div class="row" id="feedbackList">
             <!-- 加载中提示 -->
@@ -131,17 +295,14 @@
                 <p class="mt-2">正在加载您的反馈...</p>
             </div>
             
-            <!-- 空状态 - 初始隐藏 -->
-            <div class="col-12 empty-state" id="emptyState" style="display: none;">
-                <i class="bi bi-chat-square-text"></i>
-                <h3>您还没有提交任何反馈</h3>
-                <p class="text-muted">如有任何问题或建议，请点击上方的"新建反馈"按钮</p>
-                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
-                    <i class="bi bi-plus-circle me-2"></i>新建反馈
-                </button>
+            <!-- 空状态 -->
+            <div class="col-12" id="emptyState" style="display: none;">
+                <div class="empty-state">
+                    <i class="bi bi-chat-square-text"></i>
+                    <h3>您还没有提交任何反馈</h3>
+                    <p class="text-muted">暂无反馈记录</p>
+                </div>
             </div>
-            
-            <!-- 反馈卡片将通过JS动态添加到这里 -->
         </div>
     </div>
 
@@ -199,7 +360,7 @@
 
     <footer class="py-4 mt-5">
         <div class="container text-center">
-            <p class="mb-0">© 2024 "智绘影"MRI重建系统. 保留所有权利.</p>
+            <p class="mb-0">© 2025 "智绘影"MRI重建系统. 保留所有权利.</p>
         </div>
     </footer>
 

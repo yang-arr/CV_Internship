@@ -88,7 +88,7 @@ body.night-mode {
     border-radius: 3px 3px 0 0;
 }
 
-/* 设置页面标题和文字样式 */
+/* 设置页面标题 */
 .settings-header {
     background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
     padding: 3rem 0;
@@ -122,63 +122,6 @@ body.night-mode {
     animation: fade-in 0.5s ease-out 0.1s forwards;
 }
 
-/* 设置项样式 */
-.setting-item {
-    padding: 15px 0;
-}
-
-.setting-item h5 {
-    color: var(--primary-color);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.setting-item .text-muted {
-    color: #555 !important;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-/* 系统信息表格样式 */
-.table strong {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.table td {
-    color: #555;
-    padding: 0.75rem 0;
-}
-
-/* 夜间模式文字颜色调整 */
-.night-mode .settings-title {
-    color: var(--amber-text);
-}
-
-.night-mode .setting-item h5 {
-    color: var(--amber-text);
-}
-
-.night-mode .setting-item .text-muted,
-.night-mode .settings-header .lead,
-.night-mode .table td {
-    color: #BBB !important;
-}
-
-.night-mode .table strong {
-    color: var(--amber-text);
-}
-
-/* 高对比度模式文字颜色 */
-.high-contrast .settings-title,
-.high-contrast .setting-item h5,
-.high-contrast .setting-item .text-muted,
-.high-contrast .settings-header .lead,
-.high-contrast .table strong,
-.high-contrast .table td {
-    color: #fff !important;
-}
-
 /* 卡片样式 */
 .card {
     background-color: white;
@@ -209,6 +152,27 @@ body.night-mode {
 
 .card-body {
     padding: 20px;
+}
+
+/* 设置项样式 */
+.setting-item {
+    padding: 15px 0;
+}
+
+.setting-item:first-child {
+    padding-top: 0;
+}
+
+.setting-item:last-child {
+    padding-bottom: 0;
+}
+
+.night-mode .setting-item {
+    color: var(--dark-text);
+}
+
+.night-mode .text-muted {
+    color: #adb5bd !important;
 }
 
 /* 表单元素样式 */

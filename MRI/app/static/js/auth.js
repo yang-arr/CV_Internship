@@ -16,7 +16,8 @@ class AuthManager {
         this.protectedPaths = [
             '/dashboard',
             '/reconstruction',
-            '/medical-qa'
+            '/medical-qa',
+            '/online-training'
         ];
         
         // 仅管理员可访问的路径
@@ -149,6 +150,28 @@ class AuthManager {
      */
     getUserRole() {
         return localStorage.getItem(this.roleKey) || 'user';
+    }
+    
+    // 通用的fetch方法，自动添加认证头
+    async fetch(url, options = {}) {
+        // 获取令牌
+        const token = localStorage.getItem(this.tokenKey);
+        const tokenType = localStorage.getItem(this.tokenTypeKey);
+        
+        if (!token || !tokenType) {
+            throw new Error('未登录或令牌已过期');
+        }
+        
+        // 构建请求选项
+        const fetchOptions = {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `${tokenType} ${token}`
+            }
+        };
+        
+        return fetch(url, fetchOptions);
     }
 }
 

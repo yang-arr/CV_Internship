@@ -84,21 +84,68 @@ function initSaveButton() {
 
 // 影像对比按钮事件处理
 document.getElementById('compareBtn').addEventListener('click', () => {
-    // 显示提示信息
-    const toast = document.createElement('div');
-    toast.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
-    toast.innerHTML = `
-        <i class="bi bi-info-circle me-2"></i>
-        影像对比功能即将上线，敬请期待！
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    document.body.appendChild(toast);
+    // 创建模态框
+    const compareModal = document.createElement('div');
+    compareModal.className = 'modal fade';
+    compareModal.id = 'compareModal';
+    compareModal.setAttribute('aria-labelledby', 'compareModalLabel');
+    compareModal.setAttribute('aria-hidden', 'true');
+    compareModal.style.backgroundColor = 'rgba(0, 0, 0, 0.75)'; // 设置初始背景颜色为深色半透明
     
-    // 3秒后自动关闭
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    // 使用内联样式直接设置颜色
+    compareModal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered" style="display: flex; align-items: center; min-height: calc(100% - 1rem); max-width: 500px; margin: 1.75rem auto;">
+            <div class="modal-content" style="background-color: #00607A; color: white; border: none; box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #00607A, #004a60); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 1.5rem;">
+                    <h5 class="modal-title" id="compareModalLabel" style="color: white; font-weight: 600;">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>影像对比
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="background-color: #005066; padding: 1.5rem;">
+                    <div class="text-center">
+                        <i class="bi bi-clock-history display-4 mb-3" style="color: #40c4ff;"></i>
+                        <h4 style="color: white;">功能即将上线</h4>
+                        <p style="color: rgba(255, 255, 255, 0.8);">我们正在努力开发影像对比功能，敬请期待！</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background-color: #004a60; border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(compareModal);
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(compareModal, {
+        backdrop: 'static' // 防止点击背景关闭模态框
+    });
+    modal.show();
+    
+    // 添加事件监听器以确保模态框显示时背景就是深色的
+    compareModal.addEventListener('shown.bs.modal', function() {
+        // 确保模态框背景是深色的
+        document.querySelector('.modal-backdrop').style.opacity = '0.85';
+        document.querySelector('.modal-backdrop').style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+        
+        // 确保模态框在页面中居中
+        const modalDialog = document.querySelector('#compareModal .modal-dialog');
+        if (modalDialog) {
+            modalDialog.style.display = 'flex';
+            modalDialog.style.alignItems = 'center';
+            modalDialog.style.justifyContent = 'center';
+            modalDialog.style.margin = '0 auto';
+            modalDialog.style.height = '100%';
+            modalDialog.style.maxWidth = '500px';
+        }
+    });
+    
+    // 模态框关闭后从DOM中移除
+    compareModal.addEventListener('hidden.bs.modal', function () {
+        compareModal.remove();
+    });
 });
 
 // 使用帮助按钮事件处理

@@ -59,4 +59,9 @@ pytest==7.4.0
 SpeechRecognition==3.10.0
 gTTS==2.3.2
 PyAudio==0.2.13
-pydub==0.25.1 
+pydub==0.25.1
+
+# 添加在线训练所需的依赖
+torch>=1.8.0
+pillow>=8.0.0
+matplotlib>=3.4.0 
