@@ -9,6 +9,21 @@
     <link rel="stylesheet" href="/static/css/medical_qa.css">
     <!-- 加载主题工具脚本 -->
     <script src="/static/js/theme-utils.js"></script>
+    <!-- 认证检查脚本，必须在页面开始时执行 -->
+    <script>
+        // 检查认证状态
+        (function() {
+            const token = localStorage.getItem('access_token');
+            const tokenType = localStorage.getItem('token_type');
+            
+            console.log('检查认证状态: ', Boolean(token && tokenType));
+            
+            if (!token || !tokenType) {
+                console.log('未找到有效令牌，重定向到登录页面');
+                window.location.href = '/login';
+            }
+        })();
+    </script>
 </head>
 <body>
     <!-- 必须在页面开头引入Marked.js库，用于Markdown渲染 -->
@@ -27,22 +42,31 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i> 首页</a>
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door" style="margin-right: 0.25rem;"></i> 首页</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image"></i> MRI重建</a>
+                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image" style="margin-right: 0.25rem;"></i> MRI重建</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/medical-qa"><i class="bi bi-chat-dots"></i> 智能问诊</a>
+                        <a class="nav-link" href="/online-training"><i class="bi bi-gear-fill" style="margin-right: 0.25rem;"></i> 在线训练</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up"></i> 数据看板</a>
+                        <a class="nav-link active" href="/medical-qa"><i class="bi bi-chat-dots" style="margin-right: 0.25rem;"></i> 智能问诊</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i> 设置</a>
+                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up" style="margin-right: 0.25rem;"></i> 数据看板</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/about"><i class="bi bi-info-circle"></i> 关于我们</a>
+                        <a class="nav-link" href="/settings"><i class="bi bi-gear" style="margin-right: 0.25rem;"></i> 设置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about"><i class="bi bi-info-circle" style="margin-right: 0.25rem;"></i> 关于我们</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/my-feedback"><i class="bi bi-chat-square-text" style="margin-right: 0.25rem;"></i> 我的反馈</a>
+                    </li>
+                    <li class="nav-item" id="adminLink" style="display: none;">
+                        <a class="nav-link" href="/admin"><i class="bi bi-shield-lock" style="margin-right: 0.25rem;"></i> 管理控制台</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">
@@ -54,13 +78,19 @@
         </div>
     </nav>
 
-    <div class="medical-header">
+    <!-- 页面标题 - 修改样式使其与其他页面一致 -->
+    <header class="dashboard-header">
         <div class="container">
-            <h1 class="medical-title text-center">"智绘影"医疗专家问答系统</h1>
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h1 class="dashboard-title fw-bold">智能问诊</h1>
+                    <p class="lead">"智绘影"医疗专家问答系统</p>
+                </div>
+            </div>
         </div>
-    </div>
+    </header>
     
-    <div class="container">
+    <div class="container mt-4">
         <!-- 历史对话侧边栏 -->
         <div id="historySidebar" class="">
             <div class="sidebar-header">
@@ -280,6 +310,20 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
     <script src="/static/js/medical_qa.js"></script>
+    
+    <!-- 立即初始化管理员权限 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 确保按钮显示正确
+            if (window.authManager) {
+                console.log('手动触发权限检查');
+                window.authManager.updateUIElements();
+            } else {
+                console.error('找不到authManager对象');
+            }
+        });
+    </script>
 </body>
 </html> 

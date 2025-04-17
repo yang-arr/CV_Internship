@@ -133,6 +133,96 @@ body.night-mode {
     animation: fade-in 0.5s ease-out;
 }
 
+/* 标题栏样式 - 与MRI重建页面一致 */
+.dashboard-header {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
+    color: var(--primary-color);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 var(--border-radius-base) var(--border-radius-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: all var(--transition-medium);
+    margin-top: 0;
+}
+
+.dashboard-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+    z-index: 2;
+}
+
+.dashboard-title {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    font-size: 2.75rem;
+    color: var(--primary-color);
+    transition: color var(--transition-medium);
+}
+
+.dashboard-header .lead {
+    margin-bottom: 0;
+    opacity: 0.9;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    transition: color var(--transition-medium);
+}
+
+.dashboard-header .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-color: transparent;
+    transition: all 0.15s;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+}
+
+.dashboard-header .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 夜间模式样式 */
+.night-mode .dashboard-header {
+    background: linear-gradient(135deg, #002a36 0%, var(--dark-bg-color) 100%) !important;
+    color: var(--dark-text) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.night-mode .dashboard-header::before {
+    background: linear-gradient(to right, var(--highlight-color), var(--amber-text));
+}
+
+.night-mode .dashboard-title {
+    color: var(--amber-text);
+}
+
+.night-mode .dashboard-header .lead {
+    color: var(--dark-text);
+}
+
+.night-mode .dashboard-header .btn-outline-primary {
+    color: var(--highlight-color);
+    border-color: var(--highlight-color);
+    background-color: transparent;
+}
+
+.night-mode .dashboard-header .btn-outline-primary:hover {
+    background-color: var(--highlight-color);
+    color: var(--dark-bg-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
 .chat-container {
     height: 65vh;
     overflow-y: auto;

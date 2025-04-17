@@ -135,6 +135,95 @@ body.night-mode {
     color: #BBB;
 }
 
+/* 标题栏样式 - 与MRI重建页面一致 */
+.dashboard-header {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #f8f9fa 100%);
+    color: var(--primary-color);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 var(--border-radius-base) var(--border-radius-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: all var(--transition-medium);
+}
+
+.dashboard-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(to right, var(--primary-color), var(--highlight-color));
+    z-index: 2;
+}
+
+.dashboard-title {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    font-size: 2.75rem;
+    color: var(--primary-color);
+    transition: color var(--transition-medium);
+}
+
+.dashboard-header .lead {
+    margin-bottom: 0;
+    opacity: 0.9;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    transition: color var(--transition-medium);
+}
+
+.dashboard-header .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background-color: transparent;
+    transition: all 0.15s;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+}
+
+.dashboard-header .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 夜间模式样式 */
+.night-mode .dashboard-header {
+    background: linear-gradient(135deg, #002a36 0%, var(--dark-bg-color) 100%) !important;
+    color: var(--dark-text) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.night-mode .dashboard-header::before {
+    background: linear-gradient(to right, var(--highlight-color), var(--amber-text));
+}
+
+.night-mode .dashboard-title {
+    color: var(--amber-text);
+}
+
+.night-mode .dashboard-header .lead {
+    color: var(--dark-text);
+}
+
+.night-mode .dashboard-header .btn-outline-primary {
+    color: var(--highlight-color);
+    border-color: var(--highlight-color);
+    background-color: transparent;
+}
+
+.night-mode .dashboard-header .btn-outline-primary:hover {
+    background-color: var(--highlight-color);
+    color: var(--dark-bg-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
 /* 卡片样式 - 与首页风格一致 */
 .card {
     background-color: white;
@@ -626,4 +715,267 @@ body.night-mode {
 .night-mode .btn-success {
     background-color: #2e7d32;
     border-color: #2e7d32;
+}
+
+/* 训练说明卡片样式 */
+.training-guide {
+    padding: 0.5rem;
+}
+
+.training-guide-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--primary-color);
+}
+
+.night-mode .training-guide-title {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    color: var(--amber-text);
+}
+
+/* 参数卡片样式 */
+.param-cards {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.param-card {
+    display: flex;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.param-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.night-mode .param-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.param-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+}
+
+.param-content {
+    flex: 1;
+}
+
+.param-content h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.param-content p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.night-mode .param-content p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* 工作流程步骤样式 */
+.workflow-steps {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.workflow-step {
+    display: flex;
+    align-items: flex-start;
+    background: rgba(0, 123, 255, 0.03);
+    border-radius: 8px;
+    padding: 1rem;
+    position: relative;
+    margin-bottom: 0;
+    transition: all 0.2s ease;
+}
+
+.workflow-step:hover {
+    background: rgba(0, 123, 255, 0.07);
+    transform: translateX(5px);
+}
+
+.night-mode .workflow-step {
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.night-mode .workflow-step:hover {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 1rem;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h6 {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.step-content p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+/* 提示框改进 */
+.alert-info {
+    border-left: 4px solid var(--info);
+    background: rgba(0, 123, 255, 0.05);
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+}
+
+.night-mode .alert-info {
+    background: rgba(0, 123, 255, 0.1);
+    border-left-color: var(--info);
+}
+
+/* 训练说明卡片新增样式 */
+.section-wrapper {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.01);
+    transition: all 0.2s ease;
+}
+
+.section-wrapper:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.night-mode .section-wrapper {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.night-mode .section-wrapper:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 常见问题优化 */
+.accordion-item {
+    border-color: rgba(0, 0, 0, 0.1);
+    background-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.accordion-button {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--primary-color);
+    font-weight: 500;
+    border-radius: 0.5rem !important;
+    box-shadow: none;
+}
+
+.accordion-button:not(.collapsed) {
+    color: var(--primary-color);
+    background-color: rgba(0, 123, 255, 0.05);
+    box-shadow: none;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(0, 123, 255, 0.2);
+}
+
+.night-mode .accordion-item {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.night-mode .accordion-button {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--highlight-color);
+}
+
+.night-mode .accordion-button:not(.collapsed) {
+    color: var(--highlight-color);
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* 等高卡片样式 */
+.equal-height-card {
+    height: 100%;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.equal-height-card .card-body {
+    flex: 1;
+}
+
+.empty-state-content {
+    margin: auto;
+    padding: 2rem 1rem;
+}
+
+@media (max-width: 991.98px) {
+    .equal-height-card {
+        min-height: auto;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* 优化空状态和进度容器的显示 */
+#training-empty-state, #training-progress-container {
+    transition: opacity 0.3s ease-in-out;
+    width: 100%;
+}
+
+/* 确保在加载过程和结果显示时卡片正常显示 */
+.card-body {
+    overflow: hidden;
+}
+
+#training-empty-state {
+    min-height: 350px;
+}
+
+#training-progress-container {
+    min-height: 350px;
+}
+
+#training-empty-state .badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+#training-empty-state .badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 确保训练按钮位于底部 */
+.mt-auto {
+    margin-top: auto;
 }

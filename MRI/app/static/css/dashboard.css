@@ -234,6 +234,33 @@ body.night-mode {
     transform: translateX(0);
 }
 
+.feature-card .btn-info {
+    background-color: #212529;
+    border-color: #212529;
+    color: white;
+    transition: all var(--transition-fast);
+    border-radius: 20px;
+    padding: 0.5rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card .btn-info::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.feature-card .btn-info:hover::after {
+    transform: translateX(0);
+}
+
 .feature-card .bi {
     font-size: 2.5rem;
     transition: all var(--transition-medium);
@@ -245,6 +272,10 @@ body.night-mode {
 
 .feature-card .bi-image {
     color: var(--primary-color);
+}
+
+.feature-card .bi-gear-fill {
+    color: #212529;
 }
 
 .feature-card .bi-chat-dots {

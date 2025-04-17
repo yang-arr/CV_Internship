@@ -1,0 +1,23 @@
+{
+  "learning_rate": 0.0001,
+  "epochs": 500,
+  "save_interval": 500,
+  "use_gpu": true,
+  "supervision_mode": "image",
+  "lambda_tv": 1e-05,
+  "encoder": {
+    "encoding_mode": "fourier",
+    "in_features": 2,
+    "out_features": 20,
+    "coordinate_scales": [
+      1.0,
+      1.0
+    ]
+  },
+  "mlp": {
+    "mlp_hidden_features": 256,
+    "mlp_hidden_layers": 4,
+    "omega_0": 30.0,
+    "activation": "sine"
+  }
+}

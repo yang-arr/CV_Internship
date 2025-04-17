@@ -57,6 +57,9 @@ class AuthManager {
         // 为所有API请求添加认证头
         this.setupRequestInterceptor();
         
+        // 更新页面上的UI元素
+        this.updateUIElements();
+        
         this.initialized = true;
     }
     
@@ -72,6 +75,10 @@ class AuthManager {
      * 判断用户是否是管理员
      */
     isAdmin() {
+        // 添加调试日志
+        console.log('检查管理员权限');
+        console.log('用户角色: ' + localStorage.getItem(this.roleKey));
+        
         return this.isLoggedIn() && localStorage.getItem(this.roleKey) === 'admin';
     }
     
@@ -123,6 +130,31 @@ class AuthManager {
         };
         
         console.log('已设置请求拦截器');
+    }
+    
+    /**
+     * 更新页面上的UI元素
+     */
+    updateUIElements() {
+        // 显示当前用户名
+        const usernameElement = document.getElementById('currentUsername');
+        if (usernameElement) {
+            usernameElement.textContent = this.getUsername() || '用户';
+        }
+        
+        // 根据用户角色显示或隐藏管理员入口
+        const adminLink = document.getElementById('adminLink');
+        if (adminLink) {
+            if (this.isAdmin()) {
+                console.log('当前用户是管理员，显示管理控制台按钮');
+                adminLink.style.display = 'block';
+            } else {
+                console.log('当前用户不是管理员，隐藏管理控制台按钮');
+                adminLink.style.display = 'none';
+            }
+        } else {
+            console.log('未找到管理员链接元素');
+        }
     }
     
     /**
@@ -180,6 +212,8 @@ const authManager = new AuthManager();
 
 // 文档加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM完全加载，执行初始化');
+    
     // 查找登出按钮并绑定事件
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
@@ -189,21 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // 显示当前用户名
-    const usernameElement = document.getElementById('currentUsername');
-    if (usernameElement) {
-        usernameElement.textContent = authManager.getUsername() || '用户';
-    }
-    
-    // 根据用户角色显示或隐藏管理员入口
-    const adminLink = document.getElementById('adminLink');
-    if (adminLink) {
-        if (authManager.isAdmin()) {
-            adminLink.style.display = 'block';
-        } else {
-            adminLink.style.display = 'none';
-        }
-    }
+    // 立即更新UI元素
+    authManager.updateUIElements();
 });
 
 // 导出认证管理器

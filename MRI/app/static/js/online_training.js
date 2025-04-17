@@ -27,7 +27,19 @@ function initializeUI() {
 
 // 初始化训练曲线图表
 function initializeChart() {
+    console.log("初始化训练损失图表");
     const ctx = document.getElementById('training-chart').getContext('2d');
+    
+    // 检查是否已经存在图表实例
+    if (trainingChart) {
+        console.log("图表已存在，重置数据");
+        trainingChart.data.labels = [];
+        trainingChart.data.datasets[0].data = [];
+        trainingChart.update();
+        return;
+    }
+    
+    // 创建新的图表实例
     trainingChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -36,18 +48,67 @@ function initializeChart() {
                 label: '训练损失',
                 data: [],
                 borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.2,
+                fill: true
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 150 // 减少动画时长以提高性能
+            },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toExponential(2);
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: '损失值'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: '训练轮次'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toExponential(4);
+                            }
+                            return label;
+                        }
+                    }
                 }
             }
         }
     });
+    
+    console.log("图表初始化完成");
+    
+    // 检查暗黑模式并更新图表
+    const isDarkMode = document.body.classList.contains('night-mode');
+    if (isDarkMode) {
+        updateChartTheme(true);
+    }
 }
 
 // 设置事件监听器
@@ -76,6 +137,12 @@ async function handleTrainingSubmit(e) {
     const formData = new FormData(form);
     
     try {
+        // 显示加载中遮罩
+        document.getElementById('loadingOverlay').classList.remove('d-none');
+        
+        // 隐藏空状态提示
+        document.getElementById('training-empty-state').style.display = 'none';
+        
         // 显示进度容器
         document.getElementById('training-progress-container').style.display = 'block';
         
@@ -92,6 +159,9 @@ async function handleTrainingSubmit(e) {
             method: 'POST',
             body: formData
         });
+        
+        // 隐藏加载中遮罩
+        document.getElementById('loadingOverlay').classList.add('d-none');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -111,6 +181,9 @@ async function handleTrainingSubmit(e) {
         errorEntry.className = 'alert alert-danger';
         errorEntry.textContent = `错误: ${error.message}`;
         logElement.appendChild(errorEntry);
+        
+        // 隐藏加载中遮罩
+        document.getElementById('loadingOverlay').classList.add('d-none');
     }
 }
 
@@ -168,26 +241,50 @@ async function handleDownloadModel() {
     if (!currentTaskId) return;
     
     try {
-        // 创建auth实例
-        const auth = new AuthManager();
-        
         // 添加日志
         const logElement = document.getElementById('training-log');
         const logEntry = document.createElement('div');
         logEntry.textContent = '正在准备下载模型...';
         logElement.appendChild(logEntry);
         
-        // 直接导航到下载URL
-        // 这将触发浏览器的下载行为
-        window.location.href = `/api/online-training/download/${currentTaskId}`;
+        // 显示加载中遮罩
+        document.getElementById('loadingOverlay').classList.remove('d-none');
         
-        // 添加下载开始日志
+        // 创建auth实例
+        const auth = new AuthManager();
+        
+        // 先检查模型权限
+        try {
+            const checkResponse = await auth.fetch(`/api/online-training/check-model/${currentTaskId}`);
+            if (!checkResponse.ok) {
+                // 如果检查失败，显示错误信息
+                const errorData = await checkResponse.json();
+                throw new Error(errorData.detail || '无权限下载此模型');
+            }
+        } catch (error) {
+            throw new Error(`权限检查失败: ${error.message}`);
+        }
+        
+        // 如果权限检查通过，继续下载
+        const downloadLogEntry = document.createElement('div');
+        downloadLogEntry.className = 'alert alert-success';
+        downloadLogEntry.textContent = '模型下载已开始，请稍候...';
+        logElement.appendChild(downloadLogEntry);
+        
+        // 构建下载链接
+        const downloadURL = `/api/online-training/download/${currentTaskId}`;
+        
+        // 创建一个临时链接并模拟点击
+        const link = document.createElement('a');
+        link.href = downloadURL;
+        link.setAttribute('download', `model_${currentTaskId}.pt`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // 隐藏加载中遮罩
         setTimeout(() => {
-            const downloadLogEntry = document.createElement('div');
-            downloadLogEntry.className = 'alert alert-success';
-            downloadLogEntry.textContent = '模型下载已开始';
-            logElement.appendChild(downloadLogEntry);
-            logElement.scrollTop = logElement.scrollHeight;
+            document.getElementById('loadingOverlay').classList.add('d-none');
         }, 1000);
         
     } catch (error) {
@@ -197,17 +294,28 @@ async function handleDownloadModel() {
         errorEntry.className = 'alert alert-danger';
         errorEntry.textContent = `错误: ${error.message}`;
         logElement.appendChild(errorEntry);
+        
+        // 隐藏加载中遮罩
+        document.getElementById('loadingOverlay').classList.add('d-none');
     }
 }
 
 // 更新训练进度UI
 function updateTrainingProgress(data) {
+    console.log("收到训练状态数据:", JSON.stringify(data)); // 添加日志，便于调试
+    
     const progressBar = document.getElementById('training-progress-bar');
     const statusElement = document.getElementById('training-status');
     const lossElement = document.getElementById('training-loss');
     const logElement = document.getElementById('training-log');
     const stopTrainingBtn = document.getElementById('stop-training-btn');
     const downloadModelBtn = document.getElementById('download-model-btn');
+    
+    // 确保空状态提示被隐藏
+    document.getElementById('training-empty-state').style.display = 'none';
+    
+    // 确保进度容器显示
+    document.getElementById('training-progress-container').style.display = 'block';
 
     // 更新进度条
     if (data.progress !== undefined) {
@@ -251,47 +359,106 @@ function updateTrainingProgress(data) {
         }
     }
 
-    // 更新损失值
+    // 更新损失值（支持多种字段名称格式）
     if (data.current_loss !== undefined) {
-        lossElement.textContent = data.current_loss.toFixed(6);
+        lossElement.textContent = data.current_loss.toExponential(4);
+    } else if (data.loss !== undefined) {
+        lossElement.textContent = data.loss.toExponential(4);
+    } else if (data.current_loss_value !== undefined) {
+        lossElement.textContent = data.current_loss_value.toExponential(4);
+    }
+
+    // 更新图表 - 支持多种历史记录字段名称
+    const lossHistory = data.loss_history || data.losses || data.loss_values || [];
+    
+    // 检查是否有损失历史记录
+    if (lossHistory && lossHistory.length > 0) {
+        console.log(`更新图表，有${lossHistory.length}条历史记录`);
         
-        // 更新图表
-        if (trainingChart) {
-            const epoch = data.current_epoch || trainingChart.data.labels.length + 1;
-            trainingChart.data.labels.push(epoch);
-            trainingChart.data.datasets[0].data.push(data.current_loss);
+        // 创建标签
+        const labels = Array.from({ length: lossHistory.length }, (_, i) => i + 1);
+        
+        // 确保图表已初始化
+        if (!trainingChart) {
+            console.log("图表未初始化，正在初始化...");
+            initializeChart();
+        }
+        
+        // 更新图表数据
+        trainingChart.data.labels = labels;
+        trainingChart.data.datasets[0].data = lossHistory;
+        trainingChart.update();
+    } else {
+        // 如果没有历史记录但有当前损失值，也更新图表
+        if (data.current_loss !== undefined || data.loss !== undefined) {
+            const currentLoss = data.current_loss !== undefined ? data.current_loss : data.loss;
+            console.log(`添加当前损失值到图表: ${currentLoss}`);
+            
+            // 确保图表已初始化
+            if (!trainingChart) {
+                initializeChart();
+            }
+            
+            // 添加新的数据点
+            if (trainingChart.data.labels.length === 0) {
+                trainingChart.data.labels.push(1);
+                trainingChart.data.datasets[0].data.push(currentLoss);
+            } else {
+                const nextEpoch = trainingChart.data.labels.length + 1;
+                trainingChart.data.labels.push(nextEpoch);
+                trainingChart.data.datasets[0].data.push(currentLoss);
+            }
+            
+            // 限制显示的数据点数量，避免图表过于拥挤
+            if (trainingChart.data.labels.length > 100) {
+                trainingChart.data.labels.shift();
+                trainingChart.data.datasets[0].data.shift();
+            }
+            
             trainingChart.update();
         }
     }
 
-    // 添加日志
-    if (data.log_message) {
+    // 添加日志 - 支持多种日志字段名称
+    const logMessages = data.log_messages || data.logs || data.messages || [];
+    if (logMessages && logMessages.length > 0) {
+        for (const logMessage of logMessages) {
+            // 创建新的日志条目
+            const logEntry = document.createElement('div');
+            logEntry.textContent = logMessage;
+            logElement.appendChild(logEntry);
+        }
+        
+        // 自动滚动到底部
+        logElement.scrollTop = logElement.scrollHeight;
+    } else if (data.log_message) {
+        // 兼容单条日志消息
         const logEntry = document.createElement('div');
         logEntry.textContent = data.log_message;
         logElement.appendChild(logEntry);
         logElement.scrollTop = logElement.scrollHeight;
     }
 
-    // 如果训练完成或失败，停止轮询
+    // 如果训练完成，停止轮询
     if (data.status === 'completed' || data.status === 'failed' || data.status === 'stopped') {
         stopPolling();
         
-        if (data.status === 'completed' && data.model_path) {
-            const logEntry = document.createElement('div');
-            logEntry.className = 'alert alert-success';
-            logEntry.textContent = `训练完成！模型已保存至: ${data.model_path}`;
-            logElement.appendChild(logEntry);
+        // 根据状态添加特定日志
+        const statusLogEntry = document.createElement('div');
+        
+        if (data.status === 'completed') {
+            statusLogEntry.className = 'alert alert-success';
+            statusLogEntry.textContent = '训练已完成！您现在可以下载模型或前往MRI重建页面使用它。';
         } else if (data.status === 'failed') {
-            const logEntry = document.createElement('div');
-            logEntry.className = 'alert alert-danger';
-            logEntry.textContent = `训练失败: ${data.error || '未知错误'}`;
-            logElement.appendChild(logEntry);
+            statusLogEntry.className = 'alert alert-danger';
+            statusLogEntry.textContent = data.error || '训练失败，请检查日志了解详情。';
         } else if (data.status === 'stopped') {
-            const logEntry = document.createElement('div');
-            logEntry.className = 'alert alert-warning';
-            logEntry.textContent = `训练已中断`;
-            logElement.appendChild(logEntry);
+            statusLogEntry.className = 'alert alert-warning';
+            statusLogEntry.textContent = '训练已手动停止。';
         }
+        
+        logElement.appendChild(statusLogEntry);
+        logElement.scrollTop = logElement.scrollHeight;
     }
 }
 
@@ -305,9 +472,25 @@ function startPolling(taskId) {
     // 创建auth实例
     const auth = new AuthManager();
     
+    // 清空图表数据
+    if (trainingChart) {
+        trainingChart.data.labels = [];
+        trainingChart.data.datasets[0].data = [];
+        trainingChart.update();
+    } else {
+        initializeChart();
+    }
+    
     // 启用停止训练按钮，禁用下载模型按钮
     document.getElementById('stop-training-btn').disabled = false;
     document.getElementById('download-model-btn').disabled = true;
+    
+    // 添加开始训练的日志
+    const logElement = document.getElementById('training-log');
+    const startLogEntry = document.createElement('div');
+    startLogEntry.className = 'alert alert-info';
+    startLogEntry.textContent = `开始训练任务 (ID: ${taskId})`;
+    logElement.appendChild(startLogEntry);
     
     // 开始新的轮询
     pollingInterval = setInterval(async () => {
@@ -320,6 +503,13 @@ function startPolling(taskId) {
             updateTrainingProgress(data);
         } catch (error) {
             console.error('轮询训练状态时出错:', error);
+            
+            // 添加错误日志
+            const errorEntry = document.createElement('div');
+            errorEntry.className = 'alert alert-danger';
+            errorEntry.textContent = `轮询出错: ${error.message}`;
+            logElement.appendChild(errorEntry);
+            
             stopPolling();
         }
     }, 1000); // 每秒轮询一次
@@ -335,19 +525,75 @@ function stopPolling() {
 
 // 更新图表主题
 function updateChartTheme(isDarkMode) {
-    if (!trainingChart) return;
+    console.log(`更新图表主题，夜间模式：${isDarkMode}`);
+    if (!trainingChart) {
+        console.log("图表未初始化，无需更新主题");
+        return;
+    }
 
     const textColor = isDarkMode ? '#E0E0E0' : '#666666';
     const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const backgroundColor = isDarkMode ? 'rgba(0, 176, 255, 0.1)' : 'rgba(75, 192, 192, 0.1)';
+    const borderColor = isDarkMode ? 'rgb(0, 176, 255)' : 'rgb(75, 192, 192)';
 
+    // 检查并设置网格颜色
+    if (trainingChart.options.scales && trainingChart.options.scales.x) {
+        if (trainingChart.options.scales.x.grid) {
     trainingChart.options.scales.x.grid.color = gridColor;
+        } else {
+            trainingChart.options.scales.x.grid = { color: gridColor };
+        }
+        
+        if (trainingChart.options.scales.x.ticks) {
+            trainingChart.options.scales.x.ticks.color = textColor;
+        } else {
+            trainingChart.options.scales.x.ticks = { color: textColor };
+        }
+        
+        if (trainingChart.options.scales.x.title) {
+            trainingChart.options.scales.x.title.color = textColor;
+        }
+    }
+    
+    if (trainingChart.options.scales && trainingChart.options.scales.y) {
+        if (trainingChart.options.scales.y.grid) {
     trainingChart.options.scales.y.grid.color = gridColor;
-    trainingChart.options.scales.x.ticks.color = textColor;
+        } else {
+            trainingChart.options.scales.y.grid = { color: gridColor };
+        }
+        
+        if (trainingChart.options.scales.y.ticks) {
     trainingChart.options.scales.y.ticks.color = textColor;
+        } else {
+            trainingChart.options.scales.y.ticks = { color: textColor };
+        }
+        
+        if (trainingChart.options.scales.y.title) {
+            trainingChart.options.scales.y.title.color = textColor;
+        }
+    }
+    
+    // 设置图例颜色
+    if (trainingChart.options.plugins && trainingChart.options.plugins.legend) {
+        if (!trainingChart.options.plugins.legend.labels) {
+            trainingChart.options.plugins.legend.labels = {};
+        }
+        trainingChart.options.plugins.legend.labels.color = textColor;
+    }
+    
+    // 设置标题颜色
+    if (trainingChart.options.plugins && trainingChart.options.plugins.title) {
     trainingChart.options.plugins.title.color = textColor;
-    trainingChart.options.plugins.legend.labels.color = textColor;
+    }
+    
+    // 更新数据集颜色
+    if (trainingChart.data.datasets && trainingChart.data.datasets.length > 0) {
+        trainingChart.data.datasets[0].borderColor = borderColor;
+        trainingChart.data.datasets[0].backgroundColor = backgroundColor;
+    }
 
     trainingChart.update();
+    console.log("图表主题更新完成");
 }
 
 // 添加训练日志
@@ -361,16 +607,42 @@ function appendLog(message) {
     logContainer.scrollTop = logContainer.scrollHeight;
 }
 
-// 重置UI状态
+// 重置UI
 function resetUI() {
-    currentTaskId = null;
-    pollingInterval = null;
-    document.getElementById('training-progress-bar').style.width = '0%';
-    document.getElementById('training-progress-bar').setAttribute('aria-valuenow', 0);
-    document.getElementById('training-progress-bar').textContent = '0%';
-    document.getElementById('training-status').textContent = '';
+    // 隐藏进度容器
+    document.getElementById('training-progress-container').style.display = 'none';
+    
+    // 显示空状态提示
+    document.getElementById('training-empty-state').style.display = 'block';
+    
+    // 重置进度条
+    const progressBar = document.getElementById('training-progress-bar');
+    progressBar.style.width = '0%';
+    progressBar.setAttribute('aria-valuenow', 0);
+    progressBar.textContent = '0%';
+    
+    // 重置状态和损失
+    document.getElementById('training-status').textContent = '等待开始';
     document.getElementById('training-loss').textContent = '-';
+    
+    // 清空日志
+    document.getElementById('training-log').innerHTML = '';
+    
+    // 禁用按钮
     document.getElementById('stop-training-btn').disabled = true;
     document.getElementById('download-model-btn').disabled = true;
+    
+    // 重置表单
     document.getElementById('training-form').reset();
+    
+    // 重置图表
+    if (trainingChart) {
+        trainingChart.data.labels = [];
+        trainingChart.data.datasets[0].data = [];
+        trainingChart.update();
+    }
+    
+    // 重置全局变量
+    currentTaskId = null;
+    pollingInterval = null;
 } 

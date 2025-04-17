@@ -38,28 +38,31 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door"></i> 首页</a>
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-house-door" style="margin-right: 0.25rem;"></i> 首页</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image"></i> MRI重建</a>
+                        <a class="nav-link" href="/reconstruction"><i class="bi bi-image" style="margin-right: 0.25rem;"></i> MRI重建</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/online-training"><i class="bi bi-gear-fill"></i> 在线训练</a>
+                        <a class="nav-link active" href="/online-training"><i class="bi bi-gear-fill" style="margin-right: 0.25rem;"></i> 在线训练</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/medical-qa"><i class="bi bi-chat-dots"></i> 智能问诊</a>
+                        <a class="nav-link" href="/medical-qa"><i class="bi bi-chat-dots" style="margin-right: 0.25rem;"></i> 智能问诊</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up"></i> 数据看板</a>
+                        <a class="nav-link" href="/data-dashboard"><i class="bi bi-graph-up" style="margin-right: 0.25rem;"></i> 数据看板</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/settings"><i class="bi bi-gear"></i> 设置</a>
+                        <a class="nav-link" href="/settings"><i class="bi bi-gear" style="margin-right: 0.25rem;"></i> 设置</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/about"><i class="bi bi-info-circle"></i> 关于我们</a>
+                        <a class="nav-link" href="/about"><i class="bi bi-info-circle" style="margin-right: 0.25rem;"></i> 关于我们</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/my-feedback"><i class="bi bi-chat-square-text"></i> 我的反馈</a>
+                        <a class="nav-link" href="/my-feedback"><i class="bi bi-chat-square-text" style="margin-right: 0.25rem;"></i> 我的反馈</a>
+                    </li>
+                    <li class="nav-item" id="adminLink" style="display: none;">
+                        <a class="nav-link" href="/admin"><i class="bi bi-shield-lock" style="margin-right: 0.25rem;"></i> 管理控制台</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">
@@ -72,10 +75,14 @@
     </nav>
     
     <!-- 页面标题 -->
-    <header class="welcome-section animate-fade-in">
+    <header class="dashboard-header">
         <div class="container">
-            <h1 class="display-5">在线训练</h1>
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h1 class="dashboard-title">在线训练</h1>
             <p class="lead">训练自定义MRI重建模型</p>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -84,12 +91,12 @@
         <div class="row">
             <!-- 左侧面板 -->
             <div class="col-lg-4 animate-fade-in-delay-1">
-                <div class="card">
+                <div class="card mb-4 equal-height-card">
                     <div class="card-header bg-primary text-white">
                         <i class="bi bi-upload me-2"></i>上传训练数据
                     </div>
-                    <div class="card-body">
-                        <form id="training-form">
+                    <div class="card-body d-flex flex-column">
+                        <form id="training-form" class="flex-grow-1">
                             <div class="mb-3">
                                 <label for="training-data" class="form-label">选择训练图像</label>
                                 <input class="form-control" type="file" id="training-data" name="file" accept="image/*" required>
@@ -169,9 +176,11 @@
                                     <label class="form-check-label" for="use-gpu">使用GPU（如果可用）</label>
                                 </div>
                             </div>
+                            <div class="mt-auto">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="bi bi-play-fill me-1"></i>开始训练
                             </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -179,12 +188,13 @@
             
             <!-- 右侧内容区 -->
             <div class="col-lg-8 animate-fade-in-delay-2">
-                <div class="card">
+                <div class="card equal-height-card">
                     <div class="card-header bg-success text-white">
                         <i class="bi bi-graph-up me-2"></i>训练进度
                     </div>
-                    <div class="card-body">
-                        <div id="training-progress-container" style="display: none;">
+                    <div class="card-body d-flex flex-column position-relative">
+                        <!-- 训练进度内容区 -->
+                        <div id="training-progress-container" class="flex-grow-1 w-100" style="display: none;">
                             <div class="metrics-container mb-4">
                                 <div class="metric-card">
                                     <h6>训练状态</h6>
@@ -217,32 +227,233 @@
                                 <div id="training-log"></div>
                             </div>
                         </div>
-                        <div id="training-empty-state" class="text-center py-5">
-                            <i class="bi bi-cloud-upload text-muted" style="font-size: 3rem;"></i>
-                            <h4 class="mt-3 text-muted">开始训练模型</h4>
-                            <p class="text-muted">上传图像并配置参数后点击"开始训练"按钮</p>
+                        
+                        <!-- 空状态提示内容 -->
+                        <div id="training-empty-state" class="text-center py-5 d-flex flex-column align-items-center justify-content-center flex-grow-1 w-100">
+                            <div class="empty-state-content">
+                                <i class="bi bi-cloud-upload text-muted" style="font-size: 5rem;"></i>
+                                <h4 class="mt-4 text-muted">开始训练模型</h4>
+                                <p class="text-muted mx-auto" style="max-width: 400px;">上传图像并配置参数后点击"开始训练"按钮，系统将开始处理您的请求并在此显示训练进度</p>
+                                <div class="mt-4 mb-4">
+                                    <span class="badge bg-primary me-2">实时监控</span>
+                                    <span class="badge bg-success me-2">精准评估</span>
+                                    <span class="badge bg-info">可视化展示</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 训练说明卡片 -->
-                <div class="card mt-4 animate-fade-in-delay-3">
+        <!-- 训练说明卡片（移到底部全宽度展示） -->
+        <div class="row mt-4 animate-fade-in-delay-3">
+            <div class="col-12">
+                <div class="card">
                     <div class="card-header bg-info text-white">
                         <i class="bi bi-info-circle me-2"></i>训练说明
                     </div>
                     <div class="card-body">
-                        <h5>使用自己的图像训练模型</h5>
-                        <p>通过在线训练功能，您可以上传自己的图像数据，训练个性化的MRI重建模型。训练完成后，模型将自动保存，并可在MRI重建页面中选择使用。</p>
-                        
-                        <h6 class="mt-4">参数说明</h6>
-                        <ul>
-                            <li><strong>训练轮次</strong>: 模型训练的迭代次数，更多轮次通常能提高模型性能，但也需要更长时间</li>
-                            <li><strong>学习率</strong>: 控制模型学习速度的参数，较小的值通常能提供更稳定的训练过程</li>
-                            <li><strong>保存间隔</strong>: 每隔多少轮次保存一次训练状态，用于后续分析</li>
+                        <div class="training-guide">
+                            <!-- 使用图像训练模型介绍 -->
+                            <div class="section-wrapper mb-4">
+                                <h5 class="training-guide-title">
+                                    <i class="bi bi-images me-2 text-primary"></i>使用自己的图像训练模型
+                                </h5>
+                                <p class="training-guide-desc">通过在线训练功能，您可以上传自己的图像数据，训练个性化的MRI重建模型。训练完成后，模型将自动保存，并可在MRI重建页面中选择使用。</p>
+                            </div>
+                            
+                            <!-- 训练流程 -->
+                            <div class="row mb-4">
+                                <div class="col-lg-6">
+                                    <h5 class="training-guide-title">
+                                        <i class="bi bi-diagram-3 me-2 text-info"></i>训练流程
+                                    </h5>
+                                    <div class="workflow-steps">
+                                        <div class="workflow-step">
+                                            <div class="step-number">1</div>
+                                            <div class="step-content">
+                                                <h6>上传图像</h6>
+                                                <p>选择一张高质量的MRI图像作为训练数据</p>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">2</div>
+                                            <div class="step-content">
+                                                <h6>设置参数</h6>
+                                                <p>根据需求配置训练参数，或使用默认值</p>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">3</div>
+                                            <div class="step-content">
+                                                <h6>开始训练</h6>
+                                                <p>点击"开始训练"按钮，实时监控训练进度</p>
+                                            </div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">4</div>
+                                            <div class="step-content">
+                                                <h6>使用模型</h6>
+                                                <p>训练完成后，在MRI重建页面中选择该模型进行图像重建</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 提示区域 -->
+                                <div class="col-lg-6">
+                                    <div class="alert alert-info d-flex align-items-start">
+                                        <div class="me-3 fs-4">
+                                            <i class="bi bi-lightbulb-fill text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="alert-heading">提示</h6>
+                                            <p class="mb-0">首次训练建议使用默认参数，待熟悉系统后再尝试调整高级选项以获得更好的结果。</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 新增训练技巧卡片 -->
+                                    <div class="alert alert-success d-flex align-items-start mt-3">
+                                        <div class="me-3 fs-4">
+                                            <i class="bi bi-stars text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="alert-heading">训练技巧</h6>
+                                            <ul class="mb-0 ps-3 small">
+                                                <li>确保图像分辨率适中（256×256到512×512）以保证训练质量</li>
+                                                <li>对于复杂细节的图像，增加训练轮次至8000-10000</li>
+                                                <li>如果损失曲线波动较大，尝试降低学习率至0.00005</li>
+                                                <li>若训练结果不理想，可使用高级选项中的TV正则化</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 新增错误常见原因提示 -->
+                                    <div class="alert alert-warning d-flex align-items-start mt-3">
+                                        <div class="me-3 fs-4">
+                                            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="alert-heading">常见问题排查</h6>
+                                            <ul class="mb-0 ps-3 small">
+                                                <li>训练中断或卡住：检查网络连接和服务器状态</li>
+                                                <li>损失值异常：尝试更换训练图像或调整参数</li>
+                                                <li>显存不足错误：减少隐藏层特征数或层数</li>
+                                                <li>训练结果模糊：增加训练轮次或调整编码器配置</li>
                         </ul>
-                        
-                        <div class="alert alert-info mt-3">
-                            <i class="bi bi-lightbulb me-2"></i>提示：首次训练建议使用默认参数，待熟悉系统后再尝试调整高级选项以获得更好的结果。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 参数说明 -->
+                            <div class="mb-4">
+                                <h5 class="training-guide-title">
+                                    <i class="bi bi-list-check me-2 text-success"></i>参数说明
+                                </h5>
+                                <div class="param-cards">
+                                    <div class="param-card">
+                                        <div class="param-icon">
+                                            <i class="bi bi-repeat text-primary"></i>
+                                        </div>
+                                        <div class="param-content">
+                                            <h6>训练轮次</h6>
+                                            <p>模型训练的迭代次数，更多轮次通常能提高模型性能，但也需要更长时间</p>
+                                        </div>
+                                    </div>
+                                    <div class="param-card">
+                                        <div class="param-icon">
+                                            <i class="bi bi-speedometer2 text-danger"></i>
+                                        </div>
+                                        <div class="param-content">
+                                            <h6>学习率</h6>
+                                            <p>控制模型学习速度的参数，较小的值通常能提供更稳定的训练过程</p>
+                                        </div>
+                                    </div>
+                                    <div class="param-card">
+                                        <div class="param-icon">
+                                            <i class="bi bi-save text-success"></i>
+                                        </div>
+                                        <div class="param-content">
+                                            <h6>保存间隔</h6>
+                                            <p>每隔多少轮次保存一次训练状态，用于后续分析</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 常见问题 -->
+                            <div>
+                                <h5 class="training-guide-title">
+                                    <i class="bi bi-question-circle me-2 text-warning"></i>常见问题
+                                </h5>
+                                <div class="accordion" id="trainingFAQ">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                                训练时间需要多久？
+                                            </button>
+                                        </h2>
+                                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#trainingFAQ">
+                                            <div class="accordion-body">
+                                                训练时间取决于图像大小、训练轮次和系统配置，通常在5000轮次下可能需要10-30分钟。使用GPU可大幅加速训练过程。若使用高级选项中更复杂的网络结构，训练时间可能会增加。
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                                什么图像最适合训练？
+                                            </button>
+                                        </h2>
+                                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#trainingFAQ">
+                                            <div class="accordion-body">
+                                                建议使用高质量、无噪声的MRI图像。图像大小建议在256×256到512×512像素之间，且不含敏感个人信息。T1、T2加权成像效果较好，FLAIR和弥散成像也可使用，但可能需要更多的训练轮次。
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 新增常见问题 -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                                如何判断训练是否成功？
+                                            </button>
+                                        </h2>
+                                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#trainingFAQ">
+                                            <div class="accordion-body">
+                                                成功的训练通常会表现为损失值持续下降并最终稳定在较低水平（通常小于0.01）。训练曲线应当平滑下降，若出现大幅波动或长时间不下降，可能需要调整学习率或其他参数。完成训练后，您可以在MRI重建页面测试模型效果。
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                                不同编码器模式有什么区别？
+                                            </button>
+                                        </h2>
+                                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#trainingFAQ">
+                                            <div class="accordion-body">
+                                                <p><strong>Fourier编码器</strong>：适合处理周期性特征，对MRI图像中的纹理和边缘表现较好，训练速度较快。</p>
+                                                <p><strong>Gaussian编码器</strong>：适合处理复杂细节，对细微特征的保留更好，但训练速度相对较慢。</p>
+                                                <p>对于一般用途，推荐使用默认的Fourier编码器。若图像包含丰富细节和微妙变化，可尝试Gaussian编码器。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                                模型训练完成后如何使用？
+                                            </button>
+                                        </h2>
+                                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#trainingFAQ">
+                                            <div class="accordion-body">
+                                                训练完成后，系统会自动保存模型，并可在MRI重建页面的模型选择下拉菜单中找到。您也可以使用"保存下载模型"按钮将模型下载到本地保存。若需要在其他设备上使用，可在设置页面的模型管理区域上传已下载的模型文件。
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
